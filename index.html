@@ -109,9 +109,132 @@ input, select{
 <button id="helpBtn">Help / Legend</button>
 
 <script>
-// Full working JS logic from locked-in build preserved
 function setBadge(id,text,color){const el=document.getElementById('badge-'+id);el.textContent=text||'—';el.className='badge b-'+(color||'white');}
-// ... due to length, recalc, resetAll, modal functions remain identical to locked-in version ...
+
+function recalc(){
+  const rr=document.getElementById('rr').value;
+  const spo2=document.getElementById('spo2').value;
+  const o2=document.getElementById('o2').value;
+  const temp=document.getElementById('temp').value;
+  const sbp=document.getElementById('sbp').value;
+  const hr=document.getElementById('hr').value;
+  const loc=document.getElementById('loc').value;
+  const requireAll=document.getElementById('requireAll').checked;
+  const allFilled=rr!==''&&spo2!==''&&o2!==''&&temp!==''&&sbp!==''&&hr!==''&&loc!=='';
+
+  let s_rr=0,s_spo2=0,s_o2=0,s_temp=0,s_sbp=0,s_hr=0,s_loc=0;
+  let met=false; let triggers=[]; let highest='white';
+
+  // RR
+  if(rr!==''){const v=Number(rr);
+    if(v<5||v>35){met=true;setBadge('rr','MET (RR <5 or >35)','blue');triggers.push('RR '+v+' (Blue)');highest='blue';}
+    else if(v>=5&&v<=8){s_rr=3;setBadge('rr','3 (RR 5–8)','red');triggers.push('RR '+v+' (Red)');if(highest!=='blue')highest='red';}
+    else if(v>=9&&v<=11){s_rr=1;setBadge('rr','1 (RR 9–11)','yellow');triggers.push('RR '+v+' (Yellow)');if(highest==='white')highest='yellow';}
+    else if(v>=12&&v<=20){s_rr=0;setBadge('rr','0 (RR 12–20)','white');}
+    else if(v>=21&&v<=24){s_rr=2;setBadge('rr','2 (RR 21–24)','orange');triggers.push('RR '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
+    else if(v>=25&&v<=35){s_rr=3;setBadge('rr','3 (RR 25–35)','red');triggers.push('RR '+v+' (Red)');if(highest!=='blue')highest='red';}
+  } else setBadge('rr','—','white');
+
+  // SpO2
+  if(spo2!==''){const v=Number(spo2);
+    if(v<=91){s_spo2=3;setBadge('spo2','3 (≤91%)','red');triggers.push('SpO₂ '+v+'% (Red)');if(highest!=='blue')highest='red';}
+    else if(v>=92&&v<=93){s_spo2=2;setBadge('spo2','2 (92–93%)','orange');triggers.push('SpO₂ '+v+'% (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
+    else if(v>=94&&v<=95){s_spo2=1;setBadge('spo2','1 (94–95%)','yellow');triggers.push('SpO₂ '+v+'% (Yellow)');if(highest==='white')highest='yellow';}
+    else if(v>=96){s_spo2=0;setBadge('spo2','0 (≥96%)','white');}
+  } else setBadge('spo2','—','white');
+
+  // O2
+  if(o2==='Yes'){s_o2=2;setBadge('o2','2 (Supplemental O₂)','orange');triggers.push('O₂ Yes (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
+  else if(o2==='No'){s_o2=0;setBadge('o2','0 (No O₂)','white');}
+  else setBadge('o2','—','white');
+
+  // Temp
+  if(temp!==''){const v=Number(temp);
+    if(v<=34.9||v>=39.0){s_temp=2;setBadge('temp','2 (≤34.9 or ≥39.0)','orange');triggers.push('Temp '+v+'°C (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
+    else if((v>=35.0&&v<=35.9)||(v>=38.0&&v<=38.9)){s_temp=1;setBadge('temp','1 (35–35.9 or 38–38.9)','yellow');triggers.push('Temp '+v+'°C (Yellow)');if(highest==='white')highest='yellow';}
+    else if(v>=36.0&&v<=37.9){s_temp=0;setBadge('temp','0 (36–37.9)','white');}
+  } else setBadge('temp','—','white');
+
+  // SBP
+  if(sbp!==''){const v=Number(sbp);
+    if(v<=69){met=true;setBadge('sbp','MET (≤69)','blue');triggers.push('SBP '+v+' (Blue)');highest='blue';}
+    else if((v>=70&&v<=89)||v>=220){s_sbp=3;setBadge('sbp','3 (70–89 or ≥220)','red');triggers.push('SBP '+v+' (Red)');if(highest!=='blue')highest='red';}
+    else if(v>=90&&v<=99){s_sbp=2;setBadge('sbp','2 (90–99)','orange');triggers.push('SBP '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
+    else if(v>=100&&v<=109){s_sbp=1;setBadge('sbp','1 (100–109)','yellow');triggers.push('SBP '+v+' (Yellow)');if(highest==='white')highest='yellow';}
+    else if(v>=110&&v<=219){s_sbp=0;setBadge('sbp','0 (110–219)','white');}
+  } else setBadge('sbp','—','white');
+
+  // HR
+  if(hr!==''){const v=Number(hr);
+    if(v<=39||v>=140){met=true;setBadge('hr','MET (≤39 or ≥140)','blue');triggers.push('HR '+v+' (Blue)');highest='blue';}
+    else if(v>=130&&v<=139){s_hr=3;setBadge('hr','3 (130–139)','red');triggers.push('HR '+v+' (Red)');if(highest!=='blue')highest='red';}
+    else if((v>=111&&v<=129)||(v>=40&&v<=49)){s_hr=2;setBadge('hr','2 (111–129 or 40–49)','orange');triggers.push('HR '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
+    else if(v>=90&&v<=110){s_hr=1;setBadge('hr','1 (90–110)','yellow');triggers.push('HR '+v+' (Yellow)');if(highest==='white')highest='yellow';}
+    else if(v>=50&&v<=89){s_hr=0;setBadge('hr','0 (50–89)','white');}
+  } else setBadge('hr','—','white');
+
+  // LOC
+  if(loc==='Unresponsive/fitting'){met=true;setBadge('loc','MET (Unresponsive/fitting)','blue');triggers.push('LOC (Blue)');highest='blue';}
+  else if(loc==='Voice or Pain'){s_loc=3;setBadge('loc','3 (Voice or Pain)','red');triggers.push('LOC (Red)');if(highest!=='blue')highest='red';}
+  else if(loc==='Alert'){s_loc=0;setBadge('loc','0 (Alert)','white');}
+  else setBadge('loc','—','white');
+
+  // Totals & display
+  const total=s_rr+s_spo2+s_o2+s_temp+s_sbp+s_hr+s_loc;
+  const showEWS=requireAll?allFilled:true;
+  const ewsText=showEWS?String(total):'—';
+  document.getElementById('result').textContent='EWS: '+ewsText+' | MET: '+(met?'Yes':'No');
+
+  // Band (no blue except MET)
+  let band='white';
+  if(!isNaN(total)){
+    if(total>=8) band='red';
+    else if(total>=6) band='orange';
+    else if(total>=1) band='yellow';
+  }
+  function rank(c){return {'white':0,'yellow':1,'orange':2,'red':3,'blue':4}[c]||0;}
+  const final=met?'blue':(rank(highest)>rank(band)?highest:band);
+
+  // Background + actions
+  const action=document.getElementById('action');
+  document.body.className='';
+  if(requireAll && !allFilled){
+    if(met){document.body.classList.add('zone-blue');action.textContent='Mandatory Action: Dial 777, call MET, support ABC';}
+    else {document.body.classList.add('zone-white');action.textContent='Mandatory Action: — (complete all fields to show EWS)';}
+  }else{
+    if(final==='blue'){document.body.classList.add('zone-blue');action.textContent='Mandatory Action: Dial 777, call MET, support ABC';}
+    else if(final==='red'){document.body.classList.add('zone-red');action.textContent='Mandatory Action: Registrar review within 20 min, consider ICU referral';}
+    else if(final==='orange'){document.body.classList.add('zone-orange');action.textContent='Mandatory Action: House officer review within 60 min, inform nurse in charge, refer to PAR nurse';}
+    else if(final==='yellow'){document.body.classList.add('zone-yellow');action.textContent='Mandatory Action: Manage pain/fever/distress, increase monitoring frequency';}
+    else {document.body.classList.add('zone-white');action.textContent='Mandatory Action: —';}
+  }
+
+  // Triggered by
+  const t=document.getElementById('triggered');
+  t.textContent='Triggered by: '+(triggers.length?triggers.join(', '):'—');
+}
+
+function resetAll(){
+  ['rr','spo2','o2','temp','sbp','hr','loc'].forEach(id=>document.getElementById(id).value='');
+  ['rr','spo2','o2','temp','sbp','hr','loc'].forEach(id=>setBadge(id,'—','white'));
+  document.getElementById('result').textContent='EWS: — | MET: —';
+  document.getElementById('action').textContent='Mandatory Action: —';
+  document.getElementById('triggered').textContent='Triggered by: —';
+  document.body.className='zone-white';
+}
+
+// Wire up
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('input',recalc);
+    el.addEventListener('change',recalc);
+  });
+  document.getElementById('requireAll').addEventListener('change',recalc);
+  document.getElementById('resetBtn').addEventListener('click',resetAll);
+  document.getElementById('helpBtn').addEventListener('click',()=>document.getElementById('helpModal').style.display='block');
+  document.querySelector('.close').addEventListener('click',()=>document.getElementById('helpModal').style.display='none');
+  recalc();
+});
 </script>
 </body>
 </html>
