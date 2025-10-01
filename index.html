@@ -107,7 +107,22 @@ input, select{
 <div id="triggered">Triggered by: —</div>
 
 <button id="helpBtn">Help / Legend</button>
+<!-- Help / Legend Modal -->
+<div id="helpModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>EWS Legend</h3>
+    <ul>
+      <li><b>Blue</b>: MET criteria → immediate medical review</li>
+      <li><b>Red</b>: Score 3 → urgent review</li>
+      <li><b>Orange</b>: Score 2 → early review</li>
+      <li><b>Yellow</b>: Score 1 → monitor closely</li>
+      <li><b>White</b>: Score 0 → within normal range</li>
+    </ul>
+  </div>
+</div>
 
+  
 <script>
 function setBadge(id,text,color){const el=document.getElementById('badge-'+id);el.textContent=text||'—';el.className='badge b-'+(color||'white');}
 
