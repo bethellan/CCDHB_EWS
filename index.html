@@ -138,11 +138,13 @@ function recalc(){
   const allFilled=rr!==''&&spo2!==''&&o2!==''&&temp!==''&&sbp!==''&&hr!==''&&loc!=='';
 
   let s_rr=0,s_spo2=0,s_o2=0,s_temp=0,s_sbp=0,s_hr=0,s_loc=0;
-  let met=false; let triggers=[]; let highest='white';
+  let met=false; let triggers=[]; let metTriggers=[]; let highest='white';
+
+
 
   // RR
   if(rr!==''){const v=Number(rr);
-    if(v<5||v>35){met=true;setBadge('rr','MET (RR <5 or >35)','blue');triggers.push('RR '+v+' (Blue)');highest='blue';}
+    if(v<5||v>35){met=true;setBadge('rr','MET (RR <5 or >35)','blue');triggers.push('RR '+v+' (Blue)'); metTriggers.push('RR '+v);highest='blue';}
     else if(v>=5&&v<=8){s_rr=3;setBadge('rr','3 (RR 5–8)','red');triggers.push('RR '+v+' (Red)');if(highest!=='blue')highest='red';}
     else if(v>=9&&v<=11){s_rr=1;setBadge('rr','1 (RR 9–11)','yellow');triggers.push('RR '+v+' (Yellow)');if(highest==='white')highest='yellow';}
     else if(v>=12&&v<=20){s_rr=0;setBadge('rr','0 (RR 12–20)','white');}
@@ -172,7 +174,7 @@ function recalc(){
 
   // SBP
   if(sbp!==''){const v=Number(sbp);
-    if(v<=69){met=true;setBadge('sbp','MET (≤69)','blue');triggers.push('SBP '+v+' (Blue)');highest='blue';}
+    if(v<=69){met=true;setBadge('sbp','MET (≤69)','blue');triggers.push('SBP '+v+' (Blue)');metTriggers.push('SBP '+v); highest='blue';}
     else if((v>=70&&v<=89)||v>=220){s_sbp=3;setBadge('sbp','3 (70–89 or ≥220)','red');triggers.push('SBP '+v+' (Red)');if(highest!=='blue')highest='red';}
     else if(v>=90&&v<=99){s_sbp=2;setBadge('sbp','2 (90–99)','orange');triggers.push('SBP '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
     else if(v>=100&&v<=109){s_sbp=1;setBadge('sbp','1 (100–109)','yellow');triggers.push('SBP '+v+' (Yellow)');if(highest==='white')highest='yellow';}
@@ -181,7 +183,7 @@ function recalc(){
 
   // HR
   if(hr!==''){const v=Number(hr);
-    if(v<=39||v>=140){met=true;setBadge('hr','MET (≤39 or ≥140)','blue');triggers.push('HR '+v+' (Blue)');highest='blue';}
+    if(v<=39||v>=140){met=true;setBadge('hr','MET (≤39 or ≥140)','blue');triggers.push('HR '+v+' (Blue)');metTriggers.push('HR '+v);highest='blue';}
     else if(v>=130&&v<=139){s_hr=3;setBadge('hr','3 (130–139)','red');triggers.push('HR '+v+' (Red)');if(highest!=='blue')highest='red';}
     else if((v>=111&&v<=129)||(v>=40&&v<=49)){s_hr=2;setBadge('hr','2 (111–129 or 40–49)','orange');triggers.push('HR '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
     else if(v>=90&&v<=110){s_hr=1;setBadge('hr','1 (90–110)','yellow');triggers.push('HR '+v+' (Yellow)');if(highest==='white')highest='yellow';}
@@ -189,25 +191,26 @@ function recalc(){
   } else setBadge('hr','—','white');
 
   // LOC
-  if(loc==='Unresponsive/fitting'){met=true;setBadge('loc','MET (Unresponsive/fitting)','blue');triggers.push('LOC (Blue)');highest='blue';}
+  if(loc==='Unresponsive/fitting'){met=true;setBadge('loc','MET (Unresponsive/fitting)','blue');triggers.push('LOC (Blue)'); metTriggers.push('LOC'); highest='blue';}
   else if(loc==='Voice or Pain'){s_loc=3;setBadge('loc','3 (Voice or Pain)','red');triggers.push('LOC (Red)');if(highest!=='blue')highest='red';}
   else if(loc==='Alert'){s_loc=0;setBadge('loc','0 (Alert)','white');}
   else setBadge('loc','—','white');
 
-  // Totals & display
+ // Totals & display
 const total = s_rr + s_spo2 + s_o2 + s_temp + s_sbp + s_hr + s_loc;
 const showEWS = requireAll ? allFilled : true;
 
+// Always show a numeric EWS when allowed
 let ewsText = '—';
 if (showEWS) {
-  if (total >= 10) {
-    ewsText = 'Yes';
-    met = true; // force blue background
-  } else {
-    ewsText = String(total);
-  }
+  ewsText = String(total);
+  if (total >= 10) { met = true; } // force MET when EWS ≥10
 }
-document.getElementById('result').textContent = 'EWS: ' + ewsText + ' | MET: ' + (met ? 'Yes' : 'No');
+
+// Top-line result
+document.getElementById('result').textContent =
+  'EWS: ' + ewsText + ' | MET: ' + (met ? 'Yes' : 'No');
+
   // Band (no blue except MET)
   let band='white';
   if(!isNaN(total)){
@@ -232,9 +235,32 @@ document.getElementById('result').textContent = 'EWS: ' + ewsText + ' | MET: ' +
     else {document.body.classList.add('zone-white');action.textContent='Mandatory Action: —';}
   }
 
-  // Triggered by
-  const t=document.getElementById('triggered');
-  t.textContent='Triggered by: '+(triggers.length?triggers.join(', '):'—');
+ // Info bar / reason message
+const t = document.getElementById('triggered');
+let info = '—';
+
+if (met) {
+  if (total >= 10) {
+    // EWS-based MET
+    info = `Reason: EWS ≥10 (score ${total}) – MET call`;
+  } else {
+    // Vital-sign based MET
+    if (metTriggers.length === 1) {
+      info = `Immediate MET call: ${metTriggers[0]} has triggered an immediate MET call`;
+    } else if (metTriggers.length > 1) {
+      info = `Immediate MET call: vital sign(s) ${metTriggers.join(', ')} have triggered an immediate MET call`;
+    } else {
+      // Fallback: if for any reason met=true without a metTrigger captured
+      info = `Immediate MET call: a vital sign has triggered an immediate MET call`;
+    }
+  }
+} else {
+  // Non-MET states keep the original “Triggered by” list (yellow/orange/red contributors)
+  info = 'Triggered by: ' + (triggers.length ? triggers.join(', ') : '—');
+}
+
+t.textContent = info;
+
 }
 
 function resetAll(){
