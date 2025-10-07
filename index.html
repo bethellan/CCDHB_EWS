@@ -195,11 +195,19 @@ function recalc(){
   else setBadge('loc','—','white');
 
   // Totals & display
-  const total=s_rr+s_spo2+s_o2+s_temp+s_sbp+s_hr+s_loc;
-  const showEWS=requireAll?allFilled:true;
-  const ewsText=showEWS?String(total):'—';
-  document.getElementById('result').textContent='EWS: '+ewsText+' | MET: '+(met?'Yes':'No');
+const total = s_rr + s_spo2 + s_o2 + s_temp + s_sbp + s_hr + s_loc;
+const showEWS = requireAll ? allFilled : true;
 
+let ewsText = '—';
+if (showEWS) {
+  if (total >= 10) {
+    ewsText = 'Yes';
+    met = true; // force blue background
+  } else {
+    ewsText = String(total);
+  }
+}
+document.getElementById('result').textContent = 'EWS: ' + ewsText + ' | MET: ' + (met ? 'Yes' : 'No');
   // Band (no blue except MET)
   let band='white';
   if(!isNaN(total)){
