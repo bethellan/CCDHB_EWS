@@ -11,71 +11,109 @@
 :root{
   --yellow:#fdd835; --orange:#fb8c00; --red:#e53935; --blue:#1e88e5;
   --soft-yellow:#fff9c4; --soft-orange:#ffe0b2; --soft-red:#ffcdd2; --soft-blue:#bbdefb;
+  --ink:#182026; --muted:#5f6b76; --line:#d9dde3; --panel:#ffffff; --shadow:0 8px 26px rgba(20,30,45,.12);
 }
 *{box-sizing:border-box;}
+html{ -webkit-text-size-adjust:100%; }
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  margin:0; padding:14px; max-width:640px; margin-left:auto; margin-right:auto;
-  transition:background .2s ease-in-out;
+  margin:0; padding:12px; max-width:680px; margin-left:auto; margin-right:auto;
+  color:var(--ink); transition:background .2s ease-in-out; line-height:1.25;
 }
-h2{ text-align:center; margin:8px 0 10px; }
+h2{ text-align:center; margin:6px 0 8px; font-size:22px; letter-spacing:-.02em; }
 .toolbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0 10px; }
-.tool-left{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; }
+.tool-left{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+button{
+  border:0; border-radius:10px; padding:9px 12px; font-size:15px; font-weight:700;
+  background:#e9edf3; color:#182026; cursor:pointer;
+}
+button:active{ transform:translateY(1px); }
+#resetBtn{ white-space:nowrap; }
 
 /* Switch */
 .switch{ position:relative; display:inline-block; width:46px; height:24px; }
 .switch input{ opacity:0; width:0; height:0; }
-.slider{ position:absolute; inset:0; cursor:pointer; background:#ccc; transition:.2s; border-radius:24px; }
-.slider:before{ content:""; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; transition:.2s; border-radius:50%; }
-.switch input:checked + .slider{ background:#4caf50; }
-.switch input:checked + .slider:before{ transform:translateX(25px); }
+.slider{ position:absolute; inset:0; cursor:pointer; background:#b8c0ca; transition:.2s; border-radius:24px; }
+.slider:before{ content:""; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; transition:.2s; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+.switch input:checked + .slider{ background:#2e7d32; }
+.switch input:checked + .slider:before{ transform:translateX(22px); }
+
+/* Sticky results */
+.status-panel{
+  position:sticky; top:0; z-index:20; margin:8px 0 12px; padding:8px;
+  border:1px solid rgba(0,0,0,.12); border-radius:16px; background:rgba(255,255,255,.92);
+  backdrop-filter:saturate(140%) blur(8px); -webkit-backdrop-filter:saturate(140%) blur(8px);
+  box-shadow:var(--shadow);
+}
+#result{
+  margin:0; padding:12px; text-align:center; font-size:20px; font-weight:900;
+  border:2px solid #2a3440; border-radius:12px; background:#fff; letter-spacing:-.01em;
+}
+#result.met-alert{ background:var(--blue); color:#fff; border-color:#0c5aa8; text-transform:uppercase; }
+#action{ margin-top:7px; padding:9px 10px; text-align:center; font-size:14px; font-weight:700; border-radius:10px; background:rgba(255,255,255,0.76); }
+#triggered{ margin-top:5px; text-align:center; font-size:13px; color:#374151; }
+.meta-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; color:#5f6b76; font-size:12px; }
+#completeness{ font-weight:700; }
+#timestamp{ text-align:right; }
 
 /* Column header */
-.header-row{ display:flex; align-items:center; gap:6px; margin:2px 0 6px; color:#555; font-size:12px; }
-.header-row > div:nth-child(1){ flex:0 0 25%; padding-left:2px; }
-.header-row > div:nth-child(2){ flex:0 0 45%; text-align:center; }
-.header-row > div:nth-child(3){ flex:0 0 30%; text-align:center; }
+.header-row{ display:grid; grid-template-columns:1.1fr 1.55fr .9fr; gap:8px; margin:2px 0 6px; color:#555; font-size:12px; padding:0 4px; }
+.header-row > div:nth-child(2), .header-row > div:nth-child(3){ text-align:center; }
 
-/* Rows */
-.form-row{ display:flex; align-items:center; gap:6px; margin:6px 0; flex-wrap:nowrap; }
-label{ flex:0 0 20%; font-weight:600; font-size:14px; padding-left:2px; }
+/* Clinical cards */
+.obs-list{ display:flex; flex-direction:column; gap:8px; }
+.form-row{
+  display:grid; grid-template-columns:1.1fr 1.55fr .9fr; align-items:center; gap:8px;
+  margin:0; padding:10px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.72);
+}
+label{ font-weight:800; font-size:15px; padding-left:0; }
+.input-wrap{ display:flex; flex-direction:column; gap:4px; min-width:0; }
 input, select{
-  flex:0 0 50%; min-width:90px; font-size:15px; padding:6px;
-  -webkit-appearance:none; appearance:none;
+  width:100%; min-width:0; font-size:17px; padding:10px 9px; border:1px solid #c7cdd6;
+  border-radius:10px; background:#fff; color:#111827; -webkit-appearance:none; appearance:none;
 }
+select{ background-image:linear-gradient(45deg, transparent 50%, #667085 50%),linear-gradient(135deg, #667085 50%, transparent 50%); background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:28px; }
+input:focus, select:focus{ outline:3px solid rgba(30,136,229,.22); border-color:#1e88e5; }
+.warn{ min-height:14px; color:#a15c00; font-size:11px; font-weight:700; }
+.warn:empty{ display:block; }
 .badge{
-  flex:0 0 30%; min-width:90px; padding:5px 8px; border-radius:999px;
-  font-weight:600; font-size:12px; text-align:center; border:1px solid #ccc;
+  min-width:0; padding:8px 6px; border-radius:12px; font-weight:800; text-align:center; border:1px solid #ccc;
+  display:flex; flex-direction:column; justify-content:center; gap:1px; min-height:48px; line-height:1.08;
 }
-.b-white{ background:#eee; color:#000; }
+.badge .score{ font-size:19px; }
+.badge .range{ font-size:10.5px; font-weight:700; opacity:.9; }
+.b-white{ background:#f1f3f5; color:#000; }
 .b-yellow{ background:var(--yellow); color:#000; border-color:#c8a600; }
 .b-orange{ background:var(--orange); color:#fff; border-color:#a35500; }
 .b-red{ background:var(--red); color:#fff; border-color:#8e1e1e; }
 .b-blue{ background:var(--blue); color:#fff; border-color:#0c5aa8; }
 
-/* Results */
-#result{ margin-top:10px; padding:10px; text-align:center; font-size:18px; font-weight:800; border:2px solid #333; border-radius:8px; background:#fff; }
-#action{ margin-top:6px; padding:8px; text-align:center; font-size:14px; border-radius:6px; background:rgba(255,255,255,0.65); }
-#triggered{ margin-top:4px; text-align:center; font-size:13px; }
-
 /* Background zones */
-.zone-white{ background:#fff; }
+.zone-white{ background:#f7f8fa; }
 .zone-yellow{ background:var(--soft-yellow); }
 .zone-orange{ background:var(--soft-orange); }
 .zone-red{ background:var(--soft-red); }
 .zone-blue{ background:var(--soft-blue); }
 
 /* Help modal */
-#helpBtn{ background:var(--blue); color:#fff; width:100%; margin-top:12px; padding:8px 12px; border:none; border-radius:6px; font-size:15px; cursor:pointer; }
-.modal{ display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); }
-.modal-content{ background:#fff; margin:40px auto; padding:16px; border-radius:10px; width:90%; max-width:620px; max-height:80%; overflow-y:auto; position:relative; }
-.close{ position:absolute; right:10px; top:10px; font-size:22px; font-weight:bold; cursor:pointer; }
+#helpBtn{ background:var(--blue); color:#fff; width:100%; margin-top:12px; padding:10px 12px; border:none; border-radius:12px; font-size:15px; cursor:pointer; }
+.modal{ display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); padding:16px; }
+.modal-content{ background:#fff; margin:24px auto; padding:16px; border-radius:14px; width:100%; max-width:620px; max-height:84%; overflow-y:auto; position:relative; box-shadow:var(--shadow); }
+.close{ position:absolute; right:12px; top:8px; font-size:26px; font-weight:bold; cursor:pointer; }
+.modal-content h3{ margin-top:0; }
+.modal-content li{ margin-bottom:8px; }
 
-@media (max-width:420px){
-  label{ flex:1 1 100%; }
-  input,select{ flex:1 1 48%; }
-  .badge{ flex:1 1 48%; }
+@media (max-width:520px){
+  body{ padding:10px; }
+  h2{ font-size:20px; }
+  .toolbar{ align-items:flex-start; }
   .header-row{ display:none; }
+  .form-row{ grid-template-columns:1fr auto; gap:8px; padding:10px; }
+  .form-row label{ grid-column:1 / -1; font-size:16px; }
+  .input-wrap{ grid-column:1; }
+  .badge{ grid-column:2; width:96px; }
+  #result{ font-size:19px; padding:11px 8px; }
+  .meta-row{ font-size:11.5px; }
 }
 </style>
 </head>
@@ -84,27 +122,32 @@ input, select{
 
 <div class="toolbar">
   <div class="tool-left">
-    <span>Require all fields</span>
+    <span>Require complete observation set</span>
     <label class="switch"><input type="checkbox" id="requireAll"><span class="slider"></span></label>
   </div>
-  <button id="resetBtn">Reset</button>
+  <button id="resetBtn">Clear observations</button>
+</div>
+
+<div class="status-panel" aria-live="polite">
+  <div id="result">EWS: — | MET: —</div>
+  <div id="action">Mandatory Action: —</div>
+  <div id="triggered">Triggered by: —</div>
+  <div class="meta-row"><span id="completeness">0 of 7 observations entered</span><span id="timestamp">Not calculated yet</span></div>
 </div>
 
 <div class="header-row">
   <div>Observation</div><div>Value</div><div>EWS</div>
 </div>
 
-<div class="form-row"><label>Resp Rate</label><input type="number" id="rr" inputmode="numeric"><span id="badge-rr" class="badge b-white">—</span></div>
-<div class="form-row"><label>SpO₂ %</label><input type="number" id="spo2" inputmode="numeric"><span id="badge-spo2" class="badge b-white">—</span></div>
-<div class="form-row"><label>Sup O₂</label><select id="o2"><option value=""></option><option>Yes</option><option>No</option></select><span id="badge-o2" class="badge b-white">—</span></div>
-<div class="form-row"><label>Temp (°C)</label><input type="number" id="temp" step="0.1" inputmode="decimal"><span id="badge-temp" class="badge b-white">—</span></div>
-<div class="form-row"><label>Systolic BP</label><input type="number" id="sbp" inputmode="numeric"><span id="badge-sbp" class="badge b-white">—</span></div>
-<div class="form-row"><label>Heart Rate</label><input type="number" id="hr" inputmode="numeric"><span id="badge-hr" class="badge b-white">—</span></div>
-<div class="form-row"><label>LOC</label><select id="loc"><option value=""></option><option>Alert</option><option>Voice or Pain</option><option>Unresponsive/fitting</option></select><span id="badge-loc" class="badge b-white">—</span></div>
-
-<div id="result">EWS: — | MET: —</div>
-<div id="action">Mandatory Action: —</div>
-<div id="triggered">Triggered by: —</div>
+<div class="obs-list">
+  <div class="form-row"><label for="rr">Resp Rate</label><div class="input-wrap"><input type="number" id="rr" min="0" max="80" inputmode="numeric"><small id="warn-rr" class="warn"></small></div><span id="badge-rr" class="badge b-white">—</span></div>
+  <div class="form-row"><label for="spo2">SpO₂ %</label><div class="input-wrap"><input type="number" id="spo2" min="0" max="100" inputmode="numeric"><small id="warn-spo2" class="warn"></small></div><span id="badge-spo2" class="badge b-white">—</span></div>
+  <div class="form-row"><label for="o2">Sup O₂</label><div class="input-wrap"><select id="o2"><option value=""></option><option>Yes</option><option>No</option></select><small id="warn-o2" class="warn"></small></div><span id="badge-o2" class="badge b-white">—</span></div>
+  <div class="form-row"><label for="temp">Temp (°C)</label><div class="input-wrap"><input type="number" id="temp" min="25" max="45" step="0.1" inputmode="decimal"><small id="warn-temp" class="warn"></small></div><span id="badge-temp" class="badge b-white">—</span></div>
+  <div class="form-row"><label for="sbp">Systolic BP</label><div class="input-wrap"><input type="number" id="sbp" min="0" max="300" inputmode="numeric"><small id="warn-sbp" class="warn"></small></div><span id="badge-sbp" class="badge b-white">—</span></div>
+  <div class="form-row"><label for="hr">Heart Rate</label><div class="input-wrap"><input type="number" id="hr" min="0" max="300" inputmode="numeric"><small id="warn-hr" class="warn"></small></div><span id="badge-hr" class="badge b-white">—</span></div>
+  <div class="form-row"><label for="loc">LOC</label><div class="input-wrap"><select id="loc"><option value=""></option><option>Alert</option><option>Voice or Pain</option><option>Unresponsive/fitting</option></select><small id="warn-loc" class="warn"></small></div><span id="badge-loc" class="badge b-white">—</span></div>
+</div>
 
 <button id="helpBtn">Help / Legend</button>
 <!-- Help / Legend Modal -->
@@ -113,18 +156,57 @@ input, select{
     <span class="close">&times;</span>
     <h3>EWS Legend</h3>
     <ul>
-      <li><b>Blue</b>: MET criteria → immediate medical review</li>
-      <li><b>Red</b>: Score 3 → urgent review</li>
-      <li><b>Orange</b>: Score 2 → early review</li>
-      <li><b>Yellow</b>: Score 1 → monitor closely</li>
-      <li><b>White</b>: Score 0 → within normal range</li>
+      <li><b>Blue</b>: MET criteria → dial 777 / immediate MET call.</li>
+      <li><b>Red</b>: Score 3 or high total score → urgent registrar review.</li>
+      <li><b>Orange</b>: Score 2 or moderate total score → early house officer review.</li>
+      <li><b>Yellow</b>: Score 1 → increase monitoring and manage reversible causes.</li>
+      <li><b>White</b>: Score 0 → within normal EWS range.</li>
+    </ul>
+    <h4>Immediate MET triggers in this app</h4>
+    <ul>
+      <li>Respiratory rate &lt;5 or &gt;35</li>
+      <li>Systolic BP ≤69</li>
+      <li>Heart rate ≤39 or ≥140</li>
+      <li>Unresponsive/fitting</li>
+      <li>Total EWS ≥10</li>
     </ul>
   </div>
 </div>
 
   
 <script>
-function setBadge(id,text,color){const el=document.getElementById('badge-'+id);el.textContent=text||'—';el.className='badge b-'+(color||'white');}
+function escapeHtml(value){
+  return String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+function formatBadge(text){
+  if(!text || text==='—') return '<span class="score">—</span>';
+  if(String(text).startsWith('MET')){
+    const detail = String(text).replace(/^MET\s*/,'').replace(/[()]/g,'').trim();
+    return '<span class="score">MET</span>' + (detail ? '<span class="range">'+escapeHtml(detail)+'</span>' : '');
+  }
+  const m = String(text).match(/^([^\s]+)\s*\((.*)\)$/);
+  if(m) return '<span class="score">'+escapeHtml(m[1])+'</span><span class="range">'+escapeHtml(m[2])+'</span>';
+  return '<span class="score">'+escapeHtml(text)+'</span>';
+}
+function setBadge(id,text,color){
+  const el=document.getElementById('badge-'+id);
+  el.innerHTML=formatBadge(text||'—');
+  el.className='badge b-'+(color||'white');
+}
+function updateWarning(id, value, min, max, label){
+  const el=document.getElementById('warn-'+id);
+  if(!el) return;
+  if(value===''){ el.textContent=''; return; }
+  const n=Number(value);
+  if(!Number.isFinite(n)){ el.textContent='Check value'; return; }
+  el.textContent=(n<min || n>max) ? 'Check '+label+' - outside usual range' : '';
+}
+function updateStatusMeta(allFilled){
+  const ids=['rr','spo2','o2','temp','sbp','hr','loc'];
+  const complete=ids.filter(id=>document.getElementById(id).value!=='').length;
+  document.getElementById('completeness').textContent=complete+' of '+ids.length+' observations entered'+(allFilled?'':'');
+  document.getElementById('timestamp').textContent='Calculated '+new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
 
 function recalc(){
   const rr=document.getElementById('rr').value;
@@ -136,6 +218,12 @@ function recalc(){
   const loc=document.getElementById('loc').value;
   const requireAll=document.getElementById('requireAll').checked;
   const allFilled=rr!==''&&spo2!==''&&o2!==''&&temp!==''&&sbp!==''&&hr!==''&&loc!=='';
+  updateStatusMeta(allFilled);
+  updateWarning('rr', rr, 0, 80, 'RR');
+  updateWarning('spo2', spo2, 0, 100, 'SpO₂');
+  updateWarning('temp', temp, 25, 45, 'temperature');
+  updateWarning('sbp', sbp, 0, 300, 'BP');
+  updateWarning('hr', hr, 0, 300, 'HR');
 
   let s_rr=0,s_spo2=0,s_o2=0,s_temp=0,s_sbp=0,s_hr=0,s_loc=0;
   let met=false; let triggers=[]; let metTriggers=[]; let highest='white';
@@ -208,8 +296,9 @@ if (showEWS) {
 }
 
 // Top-line result
-document.getElementById('result').textContent =
-  'EWS: ' + ewsText + ' | MET: ' + (met ? 'Yes' : 'No');
+const resultEl = document.getElementById('result');
+resultEl.classList.toggle('met-alert', met);
+resultEl.textContent = met ? ('MET CALL REQUIRED | EWS: ' + ewsText) : ('EWS: ' + ewsText + ' | MET: No');
 
   // Band (no blue except MET)
   let band='white';
@@ -266,9 +355,13 @@ t.textContent = info;
 function resetAll(){
   ['rr','spo2','o2','temp','sbp','hr','loc'].forEach(id=>document.getElementById(id).value='');
   ['rr','spo2','o2','temp','sbp','hr','loc'].forEach(id=>setBadge(id,'—','white'));
-  document.getElementById('result').textContent='EWS: — | MET: —';
+  const resultEl=document.getElementById('result');
+  resultEl.classList.remove('met-alert');
+  resultEl.textContent='EWS: — | MET: —';
   document.getElementById('action').textContent='Mandatory Action: —';
   document.getElementById('triggered').textContent='Triggered by: —';
+  document.getElementById('completeness').textContent='0 of 7 observations entered';
+  document.getElementById('timestamp').textContent='Not calculated yet';
   document.body.className='zone-white';
 }
 
@@ -280,19 +373,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   document.getElementById('requireAll').addEventListener('change',recalc);
   document.getElementById('resetBtn').addEventListener('click',resetAll);
-  document.getElementById('helpBtn').addEventListener('click',()=>document.getElementById('helpModal').style.display='block');
-  document.querySelector('.close').addEventListener('click',()=>document.getElementById('helpModal').style.display='none');
+  const modal=document.getElementById('helpModal');
+  document.getElementById('helpBtn').addEventListener('click',()=>modal.style.display='block');
+  document.querySelector('.close').addEventListener('click',()=>modal.style.display='none');
+  window.addEventListener('click',(e)=>{ if(e.target===modal) modal.style.display='none'; });
   recalc();
-})
-// Help modal logic
-const modal = document.getElementById('helpModal');
-const helpBtn = document.getElementById('helpBtn');
-const closeBtn = document.querySelector('.close');
-
-helpBtn.addEventListener('click', () => { modal.style.display = 'block'; });
-closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-window.addEventListener('click', (e) => {
-  if (e.target == modal) { modal.style.display = 'none'; }
 });
   
 </script>

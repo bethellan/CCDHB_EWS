@@ -1,0 +1,20 @@
+CCDHB EWS UI Tweaks
+
+Changes made:
+- Moved the EWS/MET/action output into a sticky status panel near the top of the screen.
+- Converted observation entries into clearer card-style rows for mobile use.
+- Made score badges show the score more prominently, with the range underneath.
+- Renamed "Require all fields" to "Require complete observation set".
+- Renamed "Reset" to "Clear observations".
+- Added observation completeness text, e.g. "4 of 7 observations entered".
+- Added a calculated timestamp.
+- Added soft input warnings for values outside broad usual input ranges.
+- Made MET state more visually obvious with "MET CALL REQUIRED".
+- Expanded the Help / Legend modal with immediate MET trigger criteria.
+- Removed duplicate Help modal JavaScript wiring.
+
+Preserved:
+- Existing EWS scoring thresholds.
+- Existing MET trigger thresholds.
+- Existing mandatory action text.
+- Existing PWA files and icon.
