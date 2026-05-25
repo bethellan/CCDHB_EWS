@@ -1,3 +1,9 @@
+## v63
+
+- Removes duplicated observation labels from the final summary Value column.
+- Removes the repeated CONSIDER 777 PET CALL line from the white action panel.
+- Removes the Numeric total / Emergency status / Observations entered / Calculated detail boxes from the final screen.
+
 ## v62
 
 - Silences MET/PET alarm when returning to the main menu from the summary screen.

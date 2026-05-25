@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "configId": "nz-ews-config",
-  "configVersion": "2026-05-23-draft-v62",
+  "configVersion": "2026-05-23-draft-v63",
   "displayName": "NZ Adult EWS and Paediatric PEWS Configuration",
   "status": "draft",
   "country": "NZ",
@@ -2731,7 +2731,7 @@
           "label": "PEWS 8+",
           "colour": "red",
           "actionTitle": "PEWS 8+",
-          "actionText": "CONSIDER 777 PET CALL.\nNotify ACNM/Nurse in Charge.\nImmediate Paediatric Registrar + PAR review.\nPrimary team review.\nContinuous monitoring.\nMonitor ABCD.\nDocument plan as above.\nRe-calculate full PEWS after interventions.\nConsider transfer to ICU.\nCommunicate plan to whānau."
+          "actionText": "Notify ACNM/Nurse in Charge.\nImmediate Paediatric Registrar + PAR review.\nPrimary team review.\nContinuous monitoring.\nMonitor ABCD.\nDocument plan as above.\nRe-calculate full PEWS after interventions.\nConsider transfer to ICU.\nCommunicate plan to whānau."
         },
         {
           "id": "blue-zone",
