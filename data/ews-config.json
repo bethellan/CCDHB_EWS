@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "configId": "nz-ews-config",
-  "configVersion": "2026-05-23-draft-v61",
+  "configVersion": "2026-05-23-draft-v62",
   "displayName": "NZ Adult EWS and Paediatric PEWS Configuration",
   "status": "draft",
   "country": "NZ",

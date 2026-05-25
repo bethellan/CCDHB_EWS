@@ -1,4 +1,4 @@
-## v61
+## v62
 
 - Silences MET/PET alarm when returning to the main menu from the summary screen.
 - Adds a respiratory distress long-press guide hint under the paediatric respiratory distress options.
@@ -72,3 +72,8 @@ Suggested next checks before wider use:
 - Replaced the generated MET/PET alarm with a pre-rendered soft triple-beep WAV file.
 - Added Android vibration support where the browser allows `navigator.vibrate`.
 - Kept scoring logic and visual layout unchanged.
+
+
+## v62
+
+Fixes embedded fallback JSON so the app can load when opened locally/offline if the external JSON fetch fails. No scoring, colour, or layout logic intentionally changed.
