@@ -72,6 +72,36 @@ input,textarea{
 @media(max-width:520px){.menu-wrap{gap:10px;padding-left:10px;padding-right:10px}.menu-card{border-radius:24px;padding:16px}.entry-layout{gap:8px}.range-button{min-height:58px;border-left-width:10px;padding:10px 12px}.score-pill{min-width:64px;font-size:14px}.detail-grid{grid-template-columns:1fr 1fr}.summary-actions.two{grid-template-columns:1fr 1fr}}
 @media(max-height:700px){.page-title{padding:7px 10px;font-size:22px}.age-grid{gap:8px}.age-card{padding:8px;border-radius:18px}.age-icon-shell{width:74px;height:74px;border-radius:20px}.age-emoji{font-size:32px}.age-label{font-size:18px}.age-range{font-size:13px}.nav-button{min-height:48px}}
 </style>
+
+<link rel="preload" as="image" href="assets/infant.webp">
+<link rel="preload" as="image" href="assets/preschool.webp">
+<link rel="preload" as="image" href="assets/child.webp">
+<link rel="preload" as="image" href="assets/adolescent.webp">
+
+
+<style id="image-loading-optimisation">
+img{
+  image-rendering:auto;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+
+.age-card img,
+.age-card-image,
+img.age-image{
+  width:140px;
+  height:140px;
+  object-fit:contain;
+  content-visibility:auto;
+  contain-intrinsic-size:140px 140px;
+}
+
+.age-image-wrap,
+.image-placeholder{
+  background:linear-gradient(135deg,#f8f0ff,#fff5fb);
+}
+</style>
+
 </head>
 <body class="zone-white">
 <section id="mainMenu" class="screen menu-screen active" aria-label="Main menu"><div class="menu-wrap"><button id="adultBtn" class="menu-card adult" type="button"><span class="menu-card-title">NZ Adult EWS</span></button><button id="paedBtn" class="menu-card paediatric" type="button"><span class="menu-card-title">NZ Paediatric EWS</span><span class="version-chip">v62</span></button></div></section>
@@ -188,7 +218,7 @@ function chooseAction(system,summary){const bands=system.escalationBands||[];if(
 function calculateSummary(system=activeSystem,ageBand=activeAgeBand,sourceEntries=entries){const scored=sourceEntries.filter(Boolean);let total=0,emergency=false,highestZone='white',blueCount=0;scored.forEach(e=>{const score=e.choice.item.score;total+=scoreNumber(score);if(score==='blue'){emergency=true;blueCount++;}if(zoneRank(e.choice.item.zone)>zoneRank(highestZone))highestZone=e.choice.item.zone;});const threshold=system?.scoreBehaviour?.metScoreThreshold;if(threshold!=null&&total>=Number(threshold))emergency=true;const provisional={total,emergency,highestZone,blueCount,entered:scored.length,totalRequired:activeParameters.length};const action=chooseAction(system,provisional);const finalZone=emergency?'blue':(action.colour||highestZone||'white');return {...provisional,action,finalZone,timestamp:new Date()};}
 function resetEntry(system,ageBand){activeSystem=system;activeAgeBand=ageBand;activeParameters=[...(ageBand.parameters||[])];entries=new Array(activeParameters.length).fill(null);currentStep=0;lastSummary=null;}
 function startAdult(){resetEmergencyAlarm();const sys=getSystem('adult-ews');resetEntry(sys,sys.ageBands[0]);renderEntry();showScreen('entryScreen');}function startPaediatricAgeMenu(){resetEmergencyAlarm();renderAgeMenu();showScreen('ageMenu');}function startPaediatric(ageBandId){const sys=getSystem('nz-pews');const age=sys.ageBands.find(a=>a.id===ageBandId);resetEntry(sys,age);renderEntry();showScreen('entryScreen');}
-function renderAgeMenu(){const sys=getSystem('nz-pews');$('ageGrid').innerHTML=(sys.ageBands||[]).map(a=>{const src=a.graphic?.src||'';const fallback=a.graphic?.emojiFallback||'◻';return `<button class="age-card" type="button" data-age-id="${escapeHtml(a.id)}"><div class="age-icon-shell">${src?`<img class="age-icon-img" src="${escapeHtml(src)}" alt="${escapeHtml(a.graphic?.alt||a.shortLabel||a.label)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:''}<span class="age-emoji">${escapeHtml(fallback)}</span></div><div class="age-label">${escapeHtml(a.shortLabel||a.label)}</div><div class="age-range">${escapeHtml(a.label)}</div></button>`;}).join('');$('ageGrid').querySelectorAll('[data-age-id]').forEach(btn=>btn.addEventListener('click',()=>startPaediatric(btn.dataset.ageId)));}
+function renderAgeMenu(){const sys=getSystem('nz-pews');$('ageGrid').innerHTML=(sys.ageBands||[]).map(a=>{const src=a.graphic?.src||'';const fallback=a.graphic?.emojiFallback||'◻';return `<button class="age-card" type="button" data-age-id="${escapeHtml(a.id)}"><div class="age-icon-shell">${src?`<img loading="lazy" decoding="async" class="age-icon-img" src="${escapeHtml(src)}" alt="${escapeHtml(a.graphic?.alt||a.shortLabel||a.label)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:''}<span class="age-emoji">${escapeHtml(fallback)}</span></div><div class="age-label">${escapeHtml(a.shortLabel||a.label)}</div><div class="age-range">${escapeHtml(a.label)}</div></button>`;}).join('');$('ageGrid').querySelectorAll('[data-age-id]').forEach(btn=>btn.addEventListener('click',()=>startPaediatric(btn.dataset.ageId)));}
 function renderEntry(){setBodyZone('white');const isAdult=activeSystem.id==='adult-ews';const titleEl=$('entryTitle');titleEl.classList.remove('header-adult','header-paediatric');titleEl.classList.add(isAdult?'header-adult':'header-paediatric');titleEl.textContent=isAdult?'NZ Adult EWS':`NZ Paediatric EWS - ${activeAgeBand.label}`;const stepCard=$('stepCard');stepCard.classList.remove('parameter-adult','parameter-paediatric');stepCard.classList.add(isAdult?'parameter-adult':'parameter-paediatric');const bottomBar=$('bottomBar');bottomBar.classList.remove('adult-nav','paediatric-nav');bottomBar.classList.add(isAdult?'adult-nav':'paediatric-nav');const param=activeParameters[currentStep];$('stepCount').textContent=`Item ${currentStep+1} of ${activeParameters.length}`;$('parameterTitle').textContent=param.label;const choices=parameterChoices(param);const hint=(activeSystem?.id==='nz-pews'&&param.id==='respiratory-distress'&&param.assessmentGuide)?'<div class="entry-hint"><strong>Tip:</strong> Long-press any respiratory distress option to open the Respiratory Distress Guide.</div>':'';$('optionList').innerHTML=choices.map(choice=>renderChoiceButton(param,choice)).join('')+hint;attachChoiceHandlers(param);}
 function parameterChoices(param){return param.type==='option'?(param.options||[]).map(item=>({kind:'option',item})):(param.ranges||[]).map(item=>({kind:'range',item}));}
 function renderChoiceButton(param,choice){const item=choice.item,zone=item.zone||'white';const label=choice.kind==='range'?displayRange(item,param):(item.label||item.id);const sub=choice.kind==='range'?(param.unit||''):(item.reason||'');const score=scoreText(item.score,activeSystem);const choices=parameterChoices(param);const index=choices.findIndex(c=>c.item===item);return `<button class="range-button b-${escapeHtml(zone)}" type="button" data-choice-index="${index}"><span class="range-main"><span class="range-display">${escapeHtml(label)}</span>${sub?`<span class="range-sub">${escapeHtml(sub)}</span>`:''}</span><span class="score-pill">${escapeHtml(score)}</span></button>`;}

@@ -21,6 +21,36 @@
 @media(max-width:1100px){.grid>aside.stack{grid-template-columns:1fr 1fr}.grid>aside.stack .card:nth-child(3){grid-column:1/-1}.mode-grid{grid-template-columns:repeat(3,minmax(110px,1fr))}}
 @media(max-width:760px){.grid>aside.stack{grid-template-columns:1fr}.wrap{padding:10px}.split{grid-template-columns:1fr}.mode-grid{grid-template-columns:1fr 1fr}.tabs{grid-template-columns:1fr 1fr}table{font-size:13px}th,td{padding:6px}.panel-title{display:block}.sticky-actions{position:static;background:#fff;padding-top:0}}
 </style>
+
+<link rel="preload" as="image" href="assets/infant.webp">
+<link rel="preload" as="image" href="assets/preschool.webp">
+<link rel="preload" as="image" href="assets/child.webp">
+<link rel="preload" as="image" href="assets/adolescent.webp">
+
+
+<style id="image-loading-optimisation">
+img{
+  image-rendering:auto;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+
+.age-card img,
+.age-card-image,
+img.age-image{
+  width:140px;
+  height:140px;
+  object-fit:contain;
+  content-visibility:auto;
+  contain-intrinsic-size:140px 140px;
+}
+
+.age-image-wrap,
+.image-placeholder{
+  background:linear-gradient(135deg,#f8f0ff,#fff5fb);
+}
+</style>
+
 </head>
 <body>
 <header>
