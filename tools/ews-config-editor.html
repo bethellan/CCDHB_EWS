@@ -1,0 +1,227 @@
+<!doctype html>
+<!--
+  EWS Config Editor
+  Copyright © Andrew Bethell. All rights reserved.
+
+  Created for Andrew Bethell's NZ EWS / PEWS application.
+  Developed in Andrew Bethell's own time using AI-assisted development.
+  Used to edit the JSON configuration consumed by the patient-facing app.
+
+  This editor and app are not sanctioned, endorsed, certified, or maintained by
+  Te Tāhū Hauora Health Quality & Safety Commission or any other governing organisation.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EWS Config Editor v3</title>
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--ink:#102033;--muted:#5f6f82;--line:#d9e3ee;--accent:#0a66c2;--accent2:#074f96;--bad:#b00020;--ok:#137333;--warn:#9a6700;--blue:#cfe3ff;--red:#f7b5c7;--orange:#ffd59e;--yellow:#fff3a6;--white:#fff;--shadow:0 2px 10px rgba(16,32,51,.06)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.35}header{padding:18px 20px;background:#102033;color:#fff}h1{font-size:21px;margin:0 0 4px}header p{margin:0;color:#dbe8f5}.wrap{max-width:1360px;margin:0 auto;padding:16px}.grid{display:block}.grid>aside.stack{display:grid;grid-template-columns:minmax(280px,340px) minmax(420px,1fr) minmax(260px,320px);gap:12px;margin-bottom:16px;align-items:start}.grid>main.stack{max-width:none}.grid>aside .card{height:100%}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px}.stack{display:flex;flex-direction:column;gap:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:700}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{background:var(--accent2)}.btn.danger{color:#b00020;border-color:#f0b9c2}.btn.smallbtn{font-size:12px;padding:6px 8px}.btn:disabled{opacity:.5;cursor:not-allowed}select,input,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:inherit;background:#fff}textarea{resize:vertical}label{font-weight:750;font-size:13px;color:#25364a}.hint{font-size:12px;color:var(--muted)}.status{padding:10px;border-radius:10px;background:#eef6ff;border:1px solid #c8def4}.status.bad{background:#fff1f2;border-color:#ffc2ca;color:#7a0015}.status.ok{background:#eefbf1;border-color:#bce8c5;color:#0b5c24}.status.warn{background:#fff8e6;border-color:#f4d48d;color:#6f4800}.tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.tab,.mode-tab{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;text-align:left;cursor:pointer}.tab.active,.mode-tab.active{outline:3px solid rgba(10,102,194,.18);border-color:var(--accent)}.mode-grid{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:8px}.age-card{display:flex;align-items:center;gap:10px}.age-icon{width:44px;height:44px;border-radius:12px;background:#eef6ff;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden}.small{font-size:12px;color:var(--muted)}.table-wrap{overflow:auto;border-radius:12px;max-width:100%}table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:8px;vertical-align:top}th{background:#f0f5fa;text-align:left;font-size:12px;white-space:nowrap}td:last-child,th:last-child{border-right:0}tr:last-child td{border-bottom:0}td input,td select,td textarea{min-width:92px}.zone-white{background:var(--white)}.zone-yellow{background:var(--yellow)}.zone-orange{background:var(--orange)}.zone-red{background:var(--red)}.zone-blue{background:var(--blue)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.summary div{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}.panel-title{display:flex;align-items:start;justify-content:space-between;gap:12px}.panel-title h2{font-size:18px;margin:0}.pill{display:inline-block;border-radius:999px;border:1px solid var(--line);background:#f8fbff;padding:3px 8px;font-size:12px;font-weight:700}.issue-list{margin:0;padding-left:20px}.issue-list li{margin:4px 0}.sticky-actions{position:sticky;bottom:0;background:linear-gradient(transparent,#fff 30%);padding-top:18px}.mutedbox{background:#f8fbff;border:1px solid var(--line);border-radius:12px;padding:10px}.checkline{display:flex;gap:8px;align-items:center}.checkline input{width:auto}.json-preview{max-height:380px;overflow:auto;white-space:pre;background:#07111f;color:#e6f2ff;border-radius:12px;padding:12px}
+@media(max-width:1100px){.grid>aside.stack{grid-template-columns:1fr 1fr}.grid>aside.stack .card:nth-child(3){grid-column:1/-1}.mode-grid{grid-template-columns:repeat(3,minmax(110px,1fr))}}
+@media(max-width:760px){.grid>aside.stack{grid-template-columns:1fr}.wrap{padding:10px}.split{grid-template-columns:1fr}.mode-grid{grid-template-columns:1fr 1fr}.tabs{grid-template-columns:1fr 1fr}table{font-size:13px}th,td{padding:6px}.panel-title{display:block}.sticky-actions{position:static;background:#fff;padding-top:0}}
+</style>
+</head>
+<body>
+<header>
+  <h1>EWS Config Editor v3</h1>
+  <p>External schema-preserving editor for <code>ews-config.json</code>. Import, edit, validate, and export. Export uses Save As where the browser supports it.</p>
+</header>
+<div class="wrap">
+  <div class="grid">
+    <aside class="stack">
+      <section class="card stack">
+        <label>Import configuration JSON</label>
+        <input id="fileInput" type="file" accept=".json,application/json" />
+        <div class="row">
+          <button class="btn" id="loadSampleBtn">Load sample</button>
+          <button class="btn primary" id="exportBtn" disabled>Export / Save as JSON</button>
+        </div>
+        <div id="loadStatus" class="status">No file loaded.</div>
+      </section>
+
+      <section class="card stack" id="selectors" hidden>
+        <div>
+          <label>Scoring system</label>
+          <select id="systemSelect"></select>
+        </div>
+        <div>
+          <label>Editor section</label>
+          <div id="modeTabs" class="mode-grid"></div>
+        </div>
+        <div id="ageSelectorBlock">
+          <label>Age band</label>
+          <div id="ageTabs" class="tabs"></div>
+        </div>
+        <div id="parameterSelectorBlock">
+          <label>Parameter</label>
+          <select id="parameterSelect"></select>
+        </div>
+      </section>
+
+      <section class="card stack" id="schemaPanel" hidden>
+        <label>Schema-safe mode</label>
+        <div class="checkline"><input type="checkbox" id="schemaSafe" checked><span class="hint">Prevent deletion of required fields and required rows.</span></div>
+        <button class="btn" id="validateAllBtn">Validate whole config</button>
+        <div id="globalStatus" class="status">Validation not run.</div>
+      </section>
+    </aside>
+
+    <main class="stack">
+      <section class="card stack" id="overview" hidden>
+        <div class="summary" id="summary"></div>
+      </section>
+      <section class="card stack" id="editorPanel" hidden>
+        <div class="panel-title">
+          <div>
+            <h2 id="editorTitle">Editor</h2>
+            <div id="editorSubtitle" class="small"></div>
+          </div>
+          <div class="row"><button class="btn" id="validateBtn">Validate section</button></div>
+        </div>
+        <div id="workHost"></div>
+        <div id="validationStatus" class="status">Validation not run.</div>
+      </section>
+      <section class="card stack" id="previewPanel" hidden>
+        <div class="panel-title"><h2>Export preview</h2><button class="btn" id="refreshPreviewBtn">Refresh preview</button></div>
+        <div id="jsonPreview" class="json-preview mono"></div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+let cfg=null;
+let originalJsonText='';
+let currentSystemId=null;
+let currentAgeBandId=null;
+let currentParameterId=null;
+let currentMode='parameters';
+const $=id=>document.getElementById(id);
+const zones=['white','yellow','orange','red','blue'];
+const scores=['0','1','2','3','4','blue'];
+const modes=[
+  ['parameters','Parameters'],['nonScoring','Non-scoring'],['escalation','Escalation'],
+  ['metadata','Metadata'],['sources','Sources'],['validation','Validation']
+];
+const requiredTop=['schemaVersion','configId','configVersion','displayName','status','systems'];
+
+$('fileInput').addEventListener('change', async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  try{ originalJsonText=await file.text(); cfg=JSON.parse(originalJsonText); afterLoad('Loaded '+file.name); }
+  catch(err){ setStatus('loadStatus','Could not parse JSON: '+err.message,'bad'); }
+});
+$('loadSampleBtn').addEventListener('click',()=>{ cfg=sampleConfig(); originalJsonText=JSON.stringify(cfg,null,2); afterLoad('Loaded built-in sample.'); });
+$('exportBtn').addEventListener('click',exportJson);
+$('systemSelect').addEventListener('change',()=>{ currentSystemId=$('systemSelect').value; currentAgeBandId=null; currentParameterId=null; refreshAll(); });
+$('parameterSelect').addEventListener('change',()=>{ currentParameterId=$('parameterSelect').value; renderWork(); });
+$('validateBtn').addEventListener('click',()=>validateSection(true));
+$('validateAllBtn').addEventListener('click',()=>renderValidation(true));
+$('refreshPreviewBtn').addEventListener('click',renderPreview);
+
+function setStatus(id,msg,kind){ const el=$(id); el.innerHTML=msg; el.className='status '+(kind||''); }
+function safeMode(){ return $('schemaSafe')?.checked; }
+function system(){ return cfg?.systems?.find(s=>s.id===currentSystemId); }
+function ageBand(){ return system()?.ageBands?.find(a=>a.id===currentAgeBandId); }
+function parameter(){ return ageBand()?.parameters?.find(p=>p.id===currentParameterId); }
+function escapeHtml(s){ return String(s ?? '').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/'/g,'&#39;'); }
+function toValue(v){ if(v==='' || v===undefined) return null; const n=Number(v); return Number.isFinite(n)?n:v; }
+function toBool(v){ return v===true || v==='true'; }
+
+function afterLoad(msg){
+  const issues=basicShapeIssues(cfg);
+  if(issues.length){ setStatus('loadStatus','Loaded, but schema warnings: '+issues.join('; '),'warn'); }
+  else setStatus('loadStatus',msg,'ok');
+  $('selectors').hidden=false; $('schemaPanel').hidden=false; $('overview').hidden=false; $('editorPanel').hidden=false; $('previewPanel').hidden=false; $('exportBtn').disabled=false;
+  currentSystemId=cfg.systems?.[0]?.id||null; currentAgeBandId=null; currentParameterId=null; currentMode='parameters';
+  refreshAll();
+}
+function basicShapeIssues(c){ const out=[]; if(!c || typeof c!=='object') out.push('root is not an object'); requiredTop.forEach(k=>{ if(!(k in c)) out.push('missing '+k); }); if(!Array.isArray(c.systems)) out.push('systems is not an array'); return out; }
+function refreshAll(){ renderSystemSelect(); renderModeTabs(); renderAgeTabs(); renderParameterSelect(); refreshOverview(); renderWork(); renderPreview(); }
+function renderSystemSelect(){ const sel=$('systemSelect'); sel.innerHTML=''; (cfg.systems||[]).forEach(s=>{ const o=document.createElement('option'); o.value=s.id; o.textContent=(s.shortLabel? s.shortLabel+' - ':'')+(s.label||s.id); sel.appendChild(o); }); sel.value=currentSystemId; }
+function renderModeTabs(){ const host=$('modeTabs'); host.innerHTML=''; modes.forEach(([id,label])=>{ const b=document.createElement('button'); b.className='mode-tab '+(id===currentMode?'active':''); b.textContent=label; b.onclick=()=>{currentMode=id; renderModeTabs(); renderWork();}; host.appendChild(b); }); }
+function renderAgeTabs(){ const host=$('ageTabs'); host.innerHTML=''; const s=system(); const show=['parameters','nonScoring','metadata'].includes(currentMode); $('ageSelectorBlock').style.display=show?'block':'none'; if(!s||!show)return; if(!currentAgeBandId) currentAgeBandId=s.ageBands?.[0]?.id; (s.ageBands||[]).forEach(a=>{ const b=document.createElement('button'); b.className='tab '+(a.id===currentAgeBandId?'active':''); b.innerHTML=`<div class="age-card"><div class="age-icon">${escapeHtml(a.graphic?.emojiFallback||'◻')}</div><div><b>${escapeHtml(a.shortLabel||a.label||a.id)}</b><div class="small">${escapeHtml(a.label||a.id)}</div></div></div>`; b.onclick=()=>{currentAgeBandId=a.id; currentParameterId=null; refreshAll();}; host.appendChild(b); }); }
+function renderParameterSelect(){ const sel=$('parameterSelect'); sel.innerHTML=''; const a=ageBand(); const show=currentMode==='parameters'; $('parameterSelectorBlock').style.display=show?'block':'none'; if(!a||!show)return; if(!currentParameterId) currentParameterId=a.parameters?.[0]?.id; (a.parameters||[]).forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=(p.shortLabel? p.shortLabel+' - ':'')+(p.label||p.id); sel.appendChild(o); }); sel.value=currentParameterId; }
+function refreshOverview(){ if(!cfg)return; const sysCount=cfg.systems?.length||0; const ageCount=(cfg.systems||[]).reduce((n,s)=>n+(s.ageBands?.length||0),0); const paramCount=(cfg.systems||[]).reduce((n,s)=>n+(s.ageBands||[]).reduce((m,a)=>m+(a.parameters?.length||0),0),0); const escCount=(cfg.systems||[]).reduce((n,s)=>n+(s.escalationBands?.length||0),0); $('summary').innerHTML=`<div><b>Config</b><br>${escapeHtml(cfg.configVersion||'no version')}<br><span class="small">${escapeHtml(cfg.status||'no status')}</span></div><div><b>Systems</b><br>${sysCount}</div><div><b>Age bands</b><br>${ageCount}</div><div><b>Scored parameters</b><br>${paramCount}</div><div><b>Escalation bands</b><br>${escCount}</div>`; }
+function renderWork(){ renderAgeTabs(); renderParameterSelect(); const s=system(); const a=ageBand(); $('workHost').innerHTML=''; if(!cfg||!s)return; if(currentMode==='parameters') return renderParameterEditor(); if(currentMode==='nonScoring') return renderNonScoringEditor(); if(currentMode==='escalation') return renderEscalationEditor(); if(currentMode==='metadata') return renderMetadataEditor(); if(currentMode==='sources') return renderSourcesEditor(); if(currentMode==='validation') return renderValidation(false); }
+
+function renderParameterEditor(){ const p=parameter(); const a=ageBand(); const s=system(); if(!p){ $('editorTitle').textContent='Parameters'; $('editorSubtitle').textContent='No parameter selected.'; return; } $('editorTitle').textContent=p.label||p.id; $('editorSubtitle').textContent=`${s.label||s.id} · ${a.label||a.id} · ${p.type||'unknown'} parameter`;
+  const meta=`<div class="mutedbox stack"><b>Parameter metadata</b><div class="split"><div><label>ID</label><input data-param-meta="id" value="${escapeAttr(p.id)}"></div><div><label>Label</label><input data-param-meta="label" value="${escapeAttr(p.label)}"></div><div><label>Short label</label><input data-param-meta="shortLabel" value="${escapeAttr(p.shortLabel)}"></div><div><label>Unit</label><input data-param-meta="unit" value="${escapeAttr(p.unit)}"></div><div><label>Type</label><select data-param-meta="type"><option ${p.type==='numeric'?'selected':''}>numeric</option><option ${p.type==='option'?'selected':''}>option</option></select></div><div><label>Scored</label><select data-param-meta="scored"><option value="true" ${p.scored!==false?'selected':''}>true</option><option value="false" ${p.scored===false?'selected':''}>false</option></select></div><div><label>Usual min</label><input data-param-meta="usualMin" value="${escapeAttr(p.usualMin ?? '')}" placeholder="optional"></div><div><label>Usual max</label><input data-param-meta="usualMax" value="${escapeAttr(p.usualMax ?? '')}" placeholder="optional"></div></div></div>`;
+  $('workHost').innerHTML=meta+`<div class="toolbar"><button class="btn" id="addRowBtn">Add row</button><button class="btn danger" id="deleteLastRowBtn">Delete last row</button></div><div id="tableHost" class="table-wrap"></div>`;
+  bindParamMeta(p); if(p.type==='option') renderOptionTable(p,'options'); else renderRangeTable(p,'ranges'); $('addRowBtn').onclick=addParamRow; $('deleteLastRowBtn').onclick=deleteLastParamRow; validateSection(false); }
+function bindParamMeta(p){ document.querySelectorAll('[data-param-meta]').forEach(el=>{ el.onchange=el.oninput=()=>{ const k=el.dataset.paramMeta; let v=el.value; if(k==='scored') v=toBool(v); if(['usualMin','usualMax'].includes(k)) v=(v.trim()===''?undefined:Number(v)); if(v===undefined) delete p[k]; else p[k]=v; refreshOverview(); validateSection(false); }; }); }
+function renderRangeTable(p,key){ const rows=p[key]||[]; $('tableHost').innerHTML=`<table><thead><tr><th>ID</th><th>Min</th><th>Max</th><th>Display</th><th>Score</th><th>Zone</th><th>Reason</th><th></th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="zone-${r.zone||'white'}"><td><input data-row="${i}" data-key="id" value="${escapeAttr(r.id)}"></td><td><input data-row="${i}" data-key="min" value="${escapeAttr(r.min ?? '')}" placeholder="blank=open"></td><td><input data-row="${i}" data-key="max" value="${escapeAttr(r.max ?? '')}" placeholder="blank=open"></td><td><input data-row="${i}" data-key="display" value="${escapeAttr(r.display)}"></td><td><select data-row="${i}" data-key="score">${scores.map(sc=>`<option ${String(r.score)===sc?'selected':''}>${sc}</option>`).join('')}</select></td><td><select data-row="${i}" data-key="zone">${zones.map(z=>`<option ${r.zone===z?'selected':''}>${z}</option>`).join('')}</select></td><td><input data-row="${i}" data-key="reason" value="${escapeAttr(r.reason)}"></td><td><button class="btn danger smallbtn" data-del="${i}">Delete</button></td></tr>`).join('')}</tbody></table>`; bindRows(p,key); }
+function renderOptionTable(p,key){ const rows=p[key]||[]; $('tableHost').innerHTML=`<table><thead><tr><th>ID</th><th>Label</th><th>Score</th><th>Zone</th><th>Reason</th><th>Action</th><th></th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="zone-${r.zone||'white'}"><td><input data-row="${i}" data-key="id" value="${escapeAttr(r.id)}"></td><td><input data-row="${i}" data-key="label" value="${escapeAttr(r.label)}"></td><td><select data-row="${i}" data-key="score">${scores.map(sc=>`<option ${String(r.score)===sc?'selected':''}>${sc}</option>`).join('')}</select></td><td><select data-row="${i}" data-key="zone">${zones.map(z=>`<option ${r.zone===z?'selected':''}>${z}</option>`).join('')}</select></td><td><input data-row="${i}" data-key="reason" value="${escapeAttr(r.reason)}"></td><td><input data-row="${i}" data-key="action" value="${escapeAttr(r.action)}"></td><td><button class="btn danger smallbtn" data-del="${i}">Delete</button></td></tr>`).join('')}</tbody></table>`; bindRows(p,key); }
+function bindRows(parent,key){ document.querySelectorAll('[data-row]').forEach(el=>{ el.oninput=el.onchange=()=>{ const r=parent[key][Number(el.dataset.row)]; const k=el.dataset.key; let v=el.value; if(['min','max'].includes(k)) v=(v.trim()===''?null:Number(v)); if(k==='score' && v!=='blue') v=Number(v); if(v==='' && ['reason','action','display'].includes(k)) delete r[k]; else r[k]=v; if(k==='zone') renderWork(); else validateSection(false); }; }); document.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>{ const arr=parent[key]; if(safeMode() && arr.length<=1){ setStatus('validationStatus','Schema-safe mode: cannot delete the final row.','warn'); return; } arr.splice(Number(btn.dataset.del),1); renderWork(); }; }); }
+function addParamRow(){ const p=parameter(); if(!p)return; if(p.type==='option'){ p.options=p.options||[]; p.options.push({id:'new-option',label:'New option',score:0,zone:'white'}); } else { p.ranges=p.ranges||[]; p.ranges.push({id:'new-range',min:null,max:null,score:0,zone:'white',display:''}); } renderWork(); }
+function deleteLastParamRow(){ const p=parameter(); if(!p)return; const key=p.type==='option'?'options':'ranges'; if(safeMode() && (p[key]||[]).length<=1){ setStatus('validationStatus','Schema-safe mode: cannot delete the final row.','warn'); return; } p[key]?.pop(); renderWork(); }
+
+function renderNonScoringEditor(){ const a=ageBand(); const s=system(); $('editorTitle').textContent='Non-scoring observations'; $('editorSubtitle').textContent=`${s.label||s.id} · ${a?.label||'No age band selected'}`; if(!a){ $('workHost').textContent='No age band selected.'; return; } a.nonScoringObservations=a.nonScoringObservations||[]; $('workHost').innerHTML=`<div class="toolbar"><button class="btn" id="addObsBtn">Add observation</button></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Label</th><th>Type</th><th>Unit</th><th>Safety override</th><th>Options / notes</th><th></th></tr></thead><tbody>${a.nonScoringObservations.map((o,i)=>`<tr><td><input data-obs="${i}" data-key="id" value="${escapeAttr(o.id)}"></td><td><input data-obs="${i}" data-key="label" value="${escapeAttr(o.label)}"></td><td><select data-obs="${i}" data-key="type"><option ${o.type==='option'?'selected':''}>option</option><option ${o.type==='numeric'?'selected':''}>numeric</option></select></td><td><input data-obs="${i}" data-key="unit" value="${escapeAttr(o.unit)}"></td><td><select data-obs="${i}" data-key="safetyOverride"><option value="false" ${!o.safetyOverride?'selected':''}>false</option><option value="true" ${o.safetyOverride?'selected':''}>true</option></select></td><td><textarea data-obs-json="${i}" rows="5">${escapeHtml(JSON.stringify(o.options||[],null,2))}</textarea><div class="hint">Edit options as JSON array. Preserves action fields.</div></td><td><button class="btn danger smallbtn" data-del-obs="${i}">Delete</button></td></tr>`).join('')}</tbody></table></div>`; bindObs(a); validateSection(false); }
+function bindObs(a){ document.querySelectorAll('[data-obs]').forEach(el=>{ el.oninput=el.onchange=()=>{ const o=a.nonScoringObservations[Number(el.dataset.obs)]; const k=el.dataset.key; let v=el.value; if(k==='safetyOverride') v=toBool(v); if(v==='' && k==='unit') delete o[k]; else o[k]=v; validateSection(false); }; }); document.querySelectorAll('[data-obs-json]').forEach(el=>{ el.onchange=()=>{ try{ a.nonScoringObservations[Number(el.dataset.obsJson)].options=JSON.parse(el.value||'[]'); validateSection(false); }catch(e){ setStatus('validationStatus','Options JSON error: '+escapeHtml(e.message),'bad'); } }; }); document.querySelectorAll('[data-del-obs]').forEach(btn=>{ btn.onclick=()=>{ a.nonScoringObservations.splice(Number(btn.dataset.delObs),1); renderWork(); }; }); $('addObsBtn').onclick=()=>{ a.nonScoringObservations.push({id:'new-observation',label:'New observation',type:'option',scored:false,options:[]}); renderWork(); }; }
+
+function renderEscalationEditor(){ const s=system(); $('editorTitle').textContent='Escalation / mandatory action text'; $('editorSubtitle').textContent=s.label||s.id; s.escalationBands=s.escalationBands||[]; $('workHost').innerHTML=`<div class="toolbar"><button class="btn" id="addEscBtn">Add escalation band</button></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Min</th><th>Max</th><th>Trigger</th><th>Label</th><th>Colour</th><th>Action title</th><th>Mandatory action text</th><th></th></tr></thead><tbody>${s.escalationBands.map((b,i)=>`<tr class="zone-${b.colour||'white'}"><td><input data-esc="${i}" data-key="id" value="${escapeAttr(b.id)}"></td><td><input data-esc="${i}" data-key="minScore" value="${escapeAttr(b.minScore ?? '')}"></td><td><input data-esc="${i}" data-key="maxScore" value="${escapeAttr(b.maxScore ?? '')}" placeholder="blank=open"></td><td><input data-esc="${i}" data-key="trigger" value="${escapeAttr(b.trigger)}" placeholder="optional"></td><td><input data-esc="${i}" data-key="label" value="${escapeAttr(b.label)}"></td><td><select data-esc="${i}" data-key="colour">${zones.map(z=>`<option ${b.colour===z?'selected':''}>${z}</option>`).join('')}</select></td><td><input data-esc="${i}" data-key="actionTitle" value="${escapeAttr(b.actionTitle)}"></td><td><textarea data-esc="${i}" data-key="actionText" rows="4">${escapeHtml(b.actionText)}</textarea></td><td><button class="btn danger smallbtn" data-del-esc="${i}">Delete</button></td></tr>`).join('')}</tbody></table></div>`; bindEsc(s); validateSection(false); }
+function bindEsc(s){ document.querySelectorAll('[data-esc]').forEach(el=>{ el.oninput=el.onchange=()=>{ const b=s.escalationBands[Number(el.dataset.esc)]; const k=el.dataset.key; let v=el.value; if(['minScore','maxScore'].includes(k)) v=(v.trim()===''?null:Number(v)); if(v==='' && k==='trigger') delete b[k]; else b[k]=v; if(k==='colour') renderWork(); else validateSection(false); }; }); document.querySelectorAll('[data-del-esc]').forEach(btn=>{ btn.onclick=()=>{ if(safeMode()&&s.escalationBands.length<=1){ setStatus('validationStatus','Schema-safe mode: cannot delete the final escalation band.','warn'); return;} s.escalationBands.splice(Number(btn.dataset.delEsc),1); renderWork(); }; }); $('addEscBtn').onclick=()=>{ s.escalationBands.push({id:'new-escalation',minScore:null,maxScore:null,label:'New escalation',colour:'yellow',actionTitle:'Local action',actionText:'Enter mandatory action text.'}); renderWork(); }; }
+
+function renderMetadataEditor(){ const s=system(); const a=ageBand(); $('editorTitle').textContent='Configuration metadata'; $('editorSubtitle').textContent='Top-level, selected system, score behaviour, and selected age band'; const sb=s.scoreBehaviour||{}; s.scoreBehaviour=sb; $('workHost').innerHTML=`<div class="split"><div class="mutedbox stack"><b>Top-level config</b>${inputTop('schemaVersion')}${inputTop('configId')}${inputTop('configVersion')}${inputTop('displayName')}${inputTop('status')}${inputTop('country')}<label>Clinical safety notice</label><textarea data-top="clinicalSafetyNotice" rows="5">${escapeHtml(cfg.clinicalSafetyNotice)}</textarea></div><div class="mutedbox stack"><b>System metadata</b>${inputSys('id')}${inputSys('label')}${inputSys('shortLabel')}${inputSys('description')}${inputSys('patientGroup')}<label>Source note IDs - JSON array</label><textarea data-sys-json="sourceNoteIds" rows="4">${escapeHtml(JSON.stringify(s.sourceNoteIds||[],null,2))}</textarea></div></div><div class="mutedbox stack"><b>Score behaviour</b><div class="split">${Object.keys(sb).map(k=>`<div><label>${escapeHtml(k)}</label><input data-scorebehaviour="${escapeAttr(k)}" value="${escapeAttr(sb[k])}"></div>`).join('') || '<div class="hint">No scoreBehaviour fields.</div>'}</div><div class="row"><button class="btn" id="addBehaviourBtn">Add behaviour field</button></div></div>${a?`<div class="mutedbox stack"><b>Selected age band metadata</b><div class="split">${inputAge('id')}${inputAge('label')}${inputAge('shortLabel')}${inputAge('minAgeMonths')}${inputAge('maxAgeMonths')}</div><label>Graphic object - JSON</label><textarea data-age-json="graphic" rows="5">${escapeHtml(JSON.stringify(a.graphic||{},null,2))}</textarea></div>`:''}`; bindMetadata(s,a); validateSection(false); }
+function inputTop(k){ return `<label>${k}</label><input data-top="${k}" value="${escapeAttr(cfg[k])}">`; }
+function inputSys(k){ const s=system(); return `<label>${k}</label><input data-sys="${k}" value="${escapeAttr(s[k])}">`; }
+function inputAge(k){ const a=ageBand(); return `<div><label>${k}</label><input data-age="${k}" value="${escapeAttr(a[k] ?? '')}"></div>`; }
+function bindMetadata(s,a){ document.querySelectorAll('[data-top]').forEach(el=>{ el.oninput=()=>{ cfg[el.dataset.top]=el.value; refreshOverview(); }; }); document.querySelectorAll('[data-sys]').forEach(el=>{ el.oninput=()=>{ s[el.dataset.sys]=el.value; refreshOverview(); }; }); document.querySelectorAll('[data-age]').forEach(el=>{ el.oninput=()=>{ const k=el.dataset.age; let v=el.value; if(['minAgeMonths','maxAgeMonths'].includes(k)) v=(v.trim()===''?null:Number(v)); a[k]=v; validateSection(false); }; }); document.querySelectorAll('[data-scorebehaviour]').forEach(el=>{ el.oninput=()=>{ const k=el.dataset.scorebehaviour; const v=el.value; if(v==='true'||v==='false') s.scoreBehaviour[k]=toBool(v); else if(v!=='' && Number.isFinite(Number(v))) s.scoreBehaviour[k]=Number(v); else s.scoreBehaviour[k]=v; }; }); document.querySelectorAll('[data-sys-json]').forEach(el=>{ el.onchange=()=>{ try{s[el.dataset.sysJson]=JSON.parse(el.value||'[]');}catch(e){setStatus('validationStatus','System JSON error: '+escapeHtml(e.message),'bad');} }; }); document.querySelectorAll('[data-age-json]').forEach(el=>{ el.onchange=()=>{ try{a[el.dataset.ageJson]=JSON.parse(el.value||'{}');}catch(e){setStatus('validationStatus','Age JSON error: '+escapeHtml(e.message),'bad');} }; }); $('addBehaviourBtn').onclick=()=>{ const k=prompt('New scoreBehaviour field name'); if(k){ s.scoreBehaviour[k]=''; renderWork(); } }; }
+
+function renderSourcesEditor(){ $('editorTitle').textContent='Source notes'; $('editorSubtitle').textContent='References preserved in exported schema'; cfg.sourceNotes=cfg.sourceNotes||[]; $('workHost').innerHTML=`<div class="toolbar"><button class="btn" id="addSourceBtn">Add source note</button></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>System</th><th>Title</th><th>Publisher</th><th>Date accessed</th><th>URL</th><th>Notes</th><th></th></tr></thead><tbody>${cfg.sourceNotes.map((n,i)=>`<tr><td><input data-src="${i}" data-key="id" value="${escapeAttr(n.id)}"></td><td><input data-src="${i}" data-key="systemId" value="${escapeAttr(n.systemId)}"></td><td><input data-src="${i}" data-key="title" value="${escapeAttr(n.title)}"></td><td><input data-src="${i}" data-key="publisher" value="${escapeAttr(n.publisher)}"></td><td><input data-src="${i}" data-key="dateAccessed" value="${escapeAttr(n.dateAccessed)}"></td><td><input data-src="${i}" data-key="url" value="${escapeAttr(n.url)}"></td><td><textarea data-src="${i}" data-key="notes" rows="4">${escapeHtml(n.notes)}</textarea></td><td><button class="btn danger smallbtn" data-del-src="${i}">Delete</button></td></tr>`).join('')}</tbody></table></div>`; bindSources(); validateSection(false); }
+function bindSources(){ document.querySelectorAll('[data-src]').forEach(el=>{ el.oninput=()=>{ cfg.sourceNotes[Number(el.dataset.src)][el.dataset.key]=el.value; validateSection(false); }; }); document.querySelectorAll('[data-del-src]').forEach(btn=>{ btn.onclick=()=>{ cfg.sourceNotes.splice(Number(btn.dataset.delSrc),1); renderWork(); }; }); $('addSourceBtn').onclick=()=>{ cfg.sourceNotes.push({id:'new-source',systemId:currentSystemId,title:'New source',publisher:'',dateAccessed:'',url:'',notes:''}); renderWork(); }; }
+
+function validateSection(show){ const problems=[]; const s=system(); const a=ageBand(); if(currentMode==='parameters' && parameter()) validateParameter(parameter(),problems); if(currentMode==='nonScoring' && a) validateObservations(a.nonScoringObservations||[],problems); if(currentMode==='escalation' && s) validateEscalationBands(s.escalationBands||[],problems); if(currentMode==='metadata') validateMetadata(problems); if(currentMode==='sources') validateSources(problems); setValidationStatus(problems); return problems; }
+function setValidationStatus(problems){ if(problems.length){ setStatus('validationStatus','<b>'+problems.length+' issue(s):</b><ul class="issue-list"><li>'+problems.map(escapeHtml).join('</li><li>')+'</li></ul>','bad'); } else setStatus('validationStatus','No structural problems found in this section. Clinical accuracy still requires local verification.','ok'); }
+function validateParameter(p,problems){ if(!p.id) problems.push('Parameter missing ID.'); if(!p.label) problems.push((p.id||'parameter')+': missing label.'); if(!['numeric','option'].includes(p.type)) problems.push((p.id||'parameter')+': unsupported type '+p.type); if(p.type==='numeric') validateRanges(p.ranges||[],problems,p.id,p.unit); if(p.type==='option') validateOptions(p.options||[],problems,p.id,true); }
+function validateRanges(rows,problems,pid,unit){ if(!rows.length) problems.push(pid+': no ranges.'); const ids=new Set(); rows.forEach((r,i)=>{ if(!r.id)problems.push(`${pid} row ${i+1}: missing ID`); if(ids.has(r.id))problems.push(`${pid}: duplicate range ID ${r.id}`); ids.add(r.id); if(r.min!==null && r.min!==undefined && !Number.isFinite(Number(r.min)))problems.push(`${pid}/${r.id}: min is not numeric/null`); if(r.max!==null && r.max!==undefined && !Number.isFinite(Number(r.max)))problems.push(`${pid}/${r.id}: max is not numeric/null`); if(r.min!==null && r.max!==null && Number(r.min)>Number(r.max))problems.push(`${pid}/${r.id}: min greater than max`); if(!scores.includes(String(r.score)))problems.push(`${pid}/${r.id}: invalid score`); if(!zones.includes(r.zone))problems.push(`${pid}/${r.id}: invalid zone`); }); const sorted=rows.map(r=>({min:r.min==null?-Infinity:Number(r.min),max:r.max==null?Infinity:Number(r.max),id:r.id||'?'})).sort((a,b)=>a.min-b.min); for(let i=1;i<sorted.length;i++){ const prev=sorted[i-1], cur=sorted[i]; if(cur.min<=prev.max) problems.push(`${pid}: overlap/touching ambiguity between ${prev.id} and ${cur.id}`); const decimalUnit=(unit==='°C' || sorted.some(x=>!Number.isInteger(x.min)||!Number.isInteger(x.max))); if(!decimalUnit && Number.isFinite(prev.max)&&Number.isFinite(cur.min)&&cur.min>prev.max+1) problems.push(`${pid}: integer gap between ${prev.id} and ${cur.id}`); }
+}
+function validateOptions(rows,problems,pid,scored){ if(!rows.length) problems.push(pid+': no options.'); const ids=new Set(); rows.forEach((r,i)=>{ if(!r.id)problems.push(`${pid} option ${i+1}: missing ID`); if(ids.has(r.id))problems.push(`${pid}: duplicate option ID ${r.id}`); ids.add(r.id); if(!r.label)problems.push(`${pid}/${r.id}: missing label`); if(scored && !scores.includes(String(r.score)))problems.push(`${pid}/${r.id}: invalid score`); if(scored && !zones.includes(r.zone))problems.push(`${pid}/${r.id}: invalid zone`); }); }
+function validateObservations(rows,problems){ const ids=new Set(); rows.forEach((o,i)=>{ if(!o.id) problems.push(`Observation ${i+1}: missing ID`); if(ids.has(o.id)) problems.push(`Duplicate observation ID ${o.id}`); ids.add(o.id); if(o.scored!==false) problems.push(`${o.id}: non-scoring observation should have scored:false`); if(o.type==='option') validateOptions(o.options||[],problems,o.id,false); }); }
+function validateEscalationBands(rows,problems){ if(!rows.length) problems.push('No escalation bands.'); const ids=new Set(); rows.forEach((b,i)=>{ if(!b.id) problems.push(`Escalation ${i+1}: missing ID`); if(ids.has(b.id)) problems.push(`Duplicate escalation ID ${b.id}`); ids.add(b.id); if(!b.trigger && b.minScore==null && b.maxScore==null) problems.push(`${b.id}: needs min/max score or trigger`); if(b.minScore!=null && !Number.isFinite(Number(b.minScore))) problems.push(`${b.id}: invalid minScore`); if(b.maxScore!=null && !Number.isFinite(Number(b.maxScore))) problems.push(`${b.id}: invalid maxScore`); if(b.minScore!=null && b.maxScore!=null && Number(b.minScore)>Number(b.maxScore)) problems.push(`${b.id}: minScore greater than maxScore`); if(!zones.includes(b.colour)) problems.push(`${b.id}: invalid colour`); if(!b.actionText) problems.push(`${b.id}: missing mandatory action text`); }); }
+function validateMetadata(problems){ basicShapeIssues(cfg).forEach(x=>problems.push(x)); (cfg.systems||[]).forEach(s=>{ if(!s.id) problems.push('System missing ID'); if(!s.label) problems.push(`${s.id}: missing label`); if(!Array.isArray(s.ageBands)) problems.push(`${s.id}: ageBands must be array`); validateAgeBands(s,problems); }); }
+function validateAgeBands(s,problems){ const ids=new Set(); (s.ageBands||[]).forEach(a=>{ if(ids.has(a.id)) problems.push(`${s.id}: duplicate ageBand ID ${a.id}`); ids.add(a.id); if(a.minAgeMonths!=null && a.maxAgeMonths!=null && Number(a.minAgeMonths)>Number(a.maxAgeMonths)) problems.push(`${a.id}: minAgeMonths greater than maxAgeMonths`); }); const bands=(s.ageBands||[]).filter(a=>a.minAgeMonths!=null||a.maxAgeMonths!=null).map(a=>({id:a.id,min:a.minAgeMonths??-Infinity,max:a.maxAgeMonths??Infinity})).sort((x,y)=>x.min-y.min); for(let i=1;i<bands.length;i++){ if(bands[i].min<=bands[i-1].max) problems.push(`${s.id}: age band overlap between ${bands[i-1].id} and ${bands[i].id}`); if(Number.isFinite(bands[i].min)&&Number.isFinite(bands[i-1].max)&&bands[i].min>bands[i-1].max+1) problems.push(`${s.id}: age band gap between ${bands[i-1].id} and ${bands[i].id}`); } }
+function validateSources(problems){ const ids=new Set(); (cfg.sourceNotes||[]).forEach(n=>{ if(!n.id) problems.push('Source missing ID'); if(ids.has(n.id)) problems.push('Duplicate source ID '+n.id); ids.add(n.id); if(!n.title) problems.push(`${n.id}: missing title`); }); (cfg.systems||[]).forEach(s=>(s.sourceNoteIds||[]).forEach(id=>{ if(!ids.has(id)) problems.push(`${s.id}: sourceNoteIds references missing source ${id}`); })); }
+function validateWholeConfig(){ const problems=[]; validateMetadata(problems); validateSources(problems); (cfg.systems||[]).forEach(s=>{ validateEscalationBands(s.escalationBands||[],problems); (s.ageBands||[]).forEach(a=>{ (a.parameters||[]).forEach(p=>validateParameter(p,problems)); validateObservations(a.nonScoringObservations||[],problems); }); }); return problems; }
+function renderValidation(run){ $('editorTitle').textContent='Whole-config validation report'; $('editorSubtitle').textContent='Schema and structural checks before export'; const problems=validateWholeConfig(); $('workHost').innerHTML=problems.length?`<div class="status bad"><b>${problems.length} issue(s) found</b><ul class="issue-list"><li>${problems.map(escapeHtml).join('</li><li>')}</li></ul></div>`:`<div class="status ok">No structural problems found across the whole config. Clinical values and policy text still need local verification.</div>`; setStatus('globalStatus', problems.length?`${problems.length} issue(s) found.`:'No structural problems found. ', problems.length?'bad':'ok'); setValidationStatus(problems); }
+function renderPreview(){ if(!cfg) return; $('jsonPreview').textContent=JSON.stringify(cfg,null,2); }
+async function exportJson(){
+  if(!cfg)return;
+  renderPreview();
+  const problems=validateWholeConfig();
+  if(problems.length){
+    const ok=confirm(`There are ${problems.length} validation issue(s). Export anyway?`);
+    if(!ok) return;
+  }
+  const jsonText=JSON.stringify(cfg,null,2);
+  const blob=new Blob([jsonText],{type:'application/json'});
+  if(window.showSaveFilePicker){
+    try{
+      const handle=await window.showSaveFilePicker({
+        suggestedName:'ews-config.json',
+        types:[{description:'JSON configuration',accept:{'application/json':['.json']}}]
+      });
+      const writable=await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      setStatus('loadStatus','Saved JSON to selected location.','ok');
+      return;
+    }catch(err){
+      if(err && err.name==='AbortError'){
+        setStatus('loadStatus','Export cancelled.','warn');
+        return;
+      }
+      setStatus('loadStatus','Save picker unavailable or failed; using browser download fallback.','warn');
+    }
+  }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ews-config.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setStatus('loadStatus','Downloaded ews-config.json. If your browser did not ask where to save it, enable “Ask where to save each file” in browser download settings.','ok');
+}
+function sampleConfig(){ return {schemaVersion:'1.0',configId:'nz-ews-config',configVersion:'sample',displayName:'Sample EWS Config',status:'draft',country:'NZ',clinicalSafetyNotice:'Sample only.',sourceNotes:[],systems:[{id:'adult-ews',label:'Adult EWS',shortLabel:'Adult',patientGroup:'adult',sourceNoteIds:[],scoreBehaviour:{blueZoneOverridesTotal:true,incompleteScoreSuffix:'+'},ageBands:[{id:'adult',label:'Adult',shortLabel:'Adult',minAgeMonths:null,maxAgeMonths:null,graphic:{emojiFallback:'🧑'},parameters:[{id:'respiratory-rate',label:'Respiratory rate',shortLabel:'RR',type:'numeric',unit:'/min',scored:true,ranges:[{id:'normal',min:12,max:20,score:0,zone:'white',display:'12-20'}]}],nonScoringObservations:[]}],escalationBands:[{id:'ews-0',minScore:0,maxScore:0,label:'EWS 0',colour:'white',actionTitle:'No mandatory action',actionText:'Mandatory Action: -'}]},{id:'nz-pews',label:'NZ Paediatric PEWS',shortLabel:'PEWS',patientGroup:'paediatric',sourceNoteIds:[],scoreBehaviour:{blueZoneOverridesTotal:true,incompleteScoreSuffix:'+'},ageBands:[{id:'infant-0-11-months',label:'0-11 months',shortLabel:'Infant',minAgeMonths:0,maxAgeMonths:11,graphic:{emojiFallback:'👶'},parameters:[{id:'respiratory-rate',label:'Respiratory rate',shortLabel:'RR',type:'numeric',unit:'/min',scored:true,ranges:[{id:'normal',min:30,max:49,score:0,zone:'white',display:'30-49'}]}],nonScoringObservations:[]}],escalationBands:[{id:'pews-1-3',minScore:1,maxScore:3,label:'PEWS 1-3',colour:'yellow',actionTitle:'Local escalation',actionText:'Follow local pathway.'}]}]}; }
+</script>
+</body>
+</html>

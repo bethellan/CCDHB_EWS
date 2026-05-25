@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/ews-config.schema.json",
+  "title": "EWS Config Schema v1",
+  "type": "object",
+  "required": ["schemaVersion", "configId", "configVersion", "displayName", "status", "systems"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "configId": { "type": "string" },
+    "configVersion": { "type": "string" },
+    "displayName": { "type": "string" },
+    "status": { "type": "string", "enum": ["draft", "verified-local", "archived"] },
+    "country": { "type": "string" },
+    "clinicalSafetyNotice": { "type": "string" },
+    "sourceNotes": { "type": "array" },
+    "display": { "type": "object" },
+    "systems": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/system" }
+    }
+  },
+  "$defs": {
+    "system": {
+      "type": "object",
+      "required": ["id", "label", "patientGroup", "ageBands", "escalationBands"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "shortLabel": { "type": "string" },
+        "description": { "type": "string" },
+        "patientGroup": { "type": "string", "enum": ["adult", "paediatric", "maternity", "other"] },
+        "sourceNoteIds": { "type": "array", "items": { "type": "string" } },
+        "ageSelection": { "type": "object" },
+        "scoreBehaviour": { "type": "object" },
+        "ageBands": { "type": "array", "items": { "$ref": "#/$defs/ageBand" } },
+        "escalationBands": { "type": "array" }
+      }
+    },
+    "ageBand": {
+      "type": "object",
+      "required": ["id", "label", "parameters"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "shortLabel": { "type": "string" },
+        "minAgeMonths": { "type": ["number", "null"] },
+        "maxAgeMonths": { "type": ["number", "null"] },
+        "graphic": { "type": "object" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "nonScoringObservations": { "type": "array" }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "label", "type", "scored"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "shortLabel": { "type": "string" },
+        "type": { "type": "string", "enum": ["numeric", "option"] },
+        "unit": { "type": "string" },
+        "scored": { "type": "boolean" },
+        "ranges": { "type": "array", "items": { "$ref": "#/$defs/range" } },
+        "options": { "type": "array", "items": { "$ref": "#/$defs/option" } }
+      }
+    },
+    "range": {
+      "type": "object",
+      "required": ["id", "min", "max", "score", "zone"],
+      "properties": {
+        "id": { "type": "string" },
+        "min": { "type": ["number", "null"] },
+        "max": { "type": ["number", "null"] },
+        "score": { "anyOf": [{ "type": "number" }, { "const": "blue" }] },
+        "zone": { "type": "string", "enum": ["white", "yellow", "orange", "red", "blue"] },
+        "display": { "type": "string" }
+      }
+    },
+    "option": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "score": { "anyOf": [{ "type": "number" }, { "const": "blue" }] },
+        "zone": { "type": "string", "enum": ["white", "yellow", "orange", "red", "blue"] },
+        "action": { "type": "string" }
+      }
+    }
+  }
+}

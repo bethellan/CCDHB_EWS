@@ -1,385 +1,454 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--
+  NZ EWS / PEWS Application
+  Copyright © Andrew Bethell. All rights reserved.
+
+  Created by Andrew Bethell in his own time, using AI-assisted development.
+  Patient-facing early warning score app using a JSON-driven configuration.
+
+  This application is not sanctioned, endorsed, certified, or maintained by
+  Te Tāhū Hauora Health Quality & Safety Commission or any other governing organisation.
+  Users must refer to the latest official NZ EWS/PEWS charts, local policies,
+  and published guidelines for authoritative and current scoring, escalation,
+  and clinical decision-making requirements.
+
+  v60 silences alarms when returning to the main menu and adds a respiratory distress long-press guide hint.
+-->
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CCDHB EWS – Single Patient</title>
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="manifest" href="manifest.json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>NZ EWS</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=57">
+<link rel="manifest" href="manifest.json?v=57">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
 :root{
   --yellow:#fdd835; --orange:#fb8c00; --red:#e53935; --blue:#1e88e5;
   --soft-yellow:#fff9c4; --soft-orange:#ffe0b2; --soft-red:#ffcdd2; --soft-blue:#bbdefb;
-  --ink:#182026; --muted:#5f6b76; --line:#d9dde3; --panel:#ffffff; --shadow:0 8px 26px rgba(20,30,45,.12);
+  --ink:#182026; --muted:#5f6b76; --line:#d9dde3; --panel:#ffffff;
+  --bg:#f7f8fa; --shadow:0 12px 32px rgba(20,30,45,.14); --deep:#102033;
+  --safe-bottom:env(safe-area-inset-bottom,0px); --safe-top:env(safe-area-inset-top,0px);
 }
-*{box-sizing:border-box;}
-html{ -webkit-text-size-adjust:100%; }
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  margin:0; padding:12px; max-width:680px; margin-left:auto; margin-right:auto;
-  color:var(--ink); transition:background .2s ease-in-out; line-height:1.25;
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;-webkit-text-size-adjust:100%;touch-action:manipulation;overscroll-behavior:none}
+body{min-height:100%;margin:0;padding:0;color:var(--ink);background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.25;overscroll-behavior:none;transition:background .18s ease-in-out;}
+button,input,select,textarea{font:inherit}button{border:0;cursor:pointer;touch-action:manipulation}button:active{transform:translateY(1px)}
+html,body,button,.screen,.menu-screen,.age-screen,.entry-screen,.summary-screen,.modal,.range-button,.nav-button,.menu-card,.age-card{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
 }
-h2{ text-align:center; margin:6px 0 8px; font-size:22px; letter-spacing:-.02em; }
-.toolbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0 10px; }
-.tool-left{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
-button{
-  border:0; border-radius:10px; padding:9px 12px; font-size:15px; font-weight:700;
-  background:#e9edf3; color:#182026; cursor:pointer;
+input,textarea{
+  -webkit-user-select:text;
+  user-select:text;
+  -webkit-touch-callout:default;
 }
-button:active{ transform:translateY(1px); }
-#resetBtn{ white-space:nowrap; }
-
-/* Switch */
-.switch{ position:relative; display:inline-block; width:46px; height:24px; }
-.switch input{ opacity:0; width:0; height:0; }
-.slider{ position:absolute; inset:0; cursor:pointer; background:#b8c0ca; transition:.2s; border-radius:24px; }
-.slider:before{ content:""; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; transition:.2s; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.25); }
-.switch input:checked + .slider{ background:#2e7d32; }
-.switch input:checked + .slider:before{ transform:translateX(22px); }
-
-/* Sticky results */
-.status-panel{
-  position:sticky; top:0; z-index:20; margin:8px 0 12px; padding:8px;
-  border:1px solid rgba(0,0,0,.12); border-radius:16px; background:rgba(255,255,255,.92);
-  backdrop-filter:saturate(140%) blur(8px); -webkit-backdrop-filter:saturate(140%) blur(8px);
-  box-shadow:var(--shadow);
-}
-#result{
-  margin:0; padding:12px; text-align:center; font-size:20px; font-weight:900;
-  border:2px solid #2a3440; border-radius:12px; background:#fff; letter-spacing:-.01em;
-}
-#result.met-alert{ background:var(--blue); color:#fff; border-color:#0c5aa8; text-transform:uppercase; }
-#action{ margin-top:7px; padding:9px 10px; text-align:center; font-size:14px; font-weight:700; border-radius:10px; background:rgba(255,255,255,0.76); }
-#triggered{ margin-top:5px; text-align:center; font-size:13px; color:#374151; }
-.meta-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; color:#5f6b76; font-size:12px; }
-#completeness{ font-weight:700; }
-#timestamp{ text-align:right; }
-
-/* Column header */
-.header-row{ display:grid; grid-template-columns:1.1fr 1.55fr .9fr; gap:8px; margin:2px 0 6px; color:#555; font-size:12px; padding:0 4px; }
-.header-row > div:nth-child(2), .header-row > div:nth-child(3){ text-align:center; }
-
-/* Clinical cards */
-.obs-list{ display:flex; flex-direction:column; gap:8px; }
-.form-row{
-  display:grid; grid-template-columns:1.1fr 1.55fr .9fr; align-items:center; gap:8px;
-  margin:0; padding:10px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.72);
-}
-label{ font-weight:800; font-size:15px; padding-left:0; }
-.input-wrap{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-input, select{
-  width:100%; min-width:0; font-size:17px; padding:10px 9px; border:1px solid #c7cdd6;
-  border-radius:10px; background:#fff; color:#111827; -webkit-appearance:none; appearance:none;
-}
-select{ background-image:linear-gradient(45deg, transparent 50%, #667085 50%),linear-gradient(135deg, #667085 50%, transparent 50%); background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:28px; }
-input:focus, select:focus{ outline:3px solid rgba(30,136,229,.22); border-color:#1e88e5; }
-.warn{ min-height:14px; color:#a15c00; font-size:11px; font-weight:700; }
-.warn:empty{ display:block; }
-.badge{
-  min-width:0; padding:8px 6px; border-radius:12px; font-weight:800; text-align:center; border:1px solid #ccc;
-  display:flex; flex-direction:column; justify-content:center; gap:1px; min-height:48px; line-height:1.08;
-}
-.badge .score{ font-size:19px; }
-.badge .range{ font-size:10.5px; font-weight:700; opacity:.9; }
-.b-white{ background:#f1f3f5; color:#000; }
-.b-yellow{ background:var(--yellow); color:#000; border-color:#c8a600; }
-.b-orange{ background:var(--orange); color:#fff; border-color:#a35500; }
-.b-red{ background:var(--red); color:#fff; border-color:#8e1e1e; }
-.b-blue{ background:var(--blue); color:#fff; border-color:#0c5aa8; }
-
-/* Background zones */
-.zone-white{ background:#f7f8fa; }
-.zone-yellow{ background:var(--soft-yellow); }
-.zone-orange{ background:var(--soft-orange); }
-.zone-red{ background:var(--soft-red); }
-.zone-blue{ background:var(--soft-blue); }
-
+.screen{display:none;min-height:100dvh;width:100%;}.screen.active{display:flex}
+.zone-white{background:#f7f8fa}.zone-yellow{background:var(--soft-yellow)}.zone-orange{background:var(--soft-orange)}.zone-red{background:var(--soft-red)}.zone-blue{background:var(--soft-blue)}
+.b-white{background:#f1f3f5;color:#000;border-color:#cfd4dc}.b-yellow{background:var(--yellow);color:#000;border-color:#c8a600}.b-orange{background:var(--orange);color:#111;border-color:#a35500}.b-red{background:var(--red);color:#111;border-color:#8e1e1e}.b-blue{background:var(--blue);color:#111;border-color:#0c5aa8}
+/* Full-screen menus */
+.menu-screen{align-items:stretch;justify-content:center;background:linear-gradient(160deg,#eef6ff 0%,#f8fbff 48%,#fff7e0 100%);}
+.menu-wrap{width:100%;max-width:780px;min-height:100dvh;margin:0 auto;padding:calc(12px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));display:grid;grid-template-rows:1fr 1fr;gap:12px;}
+.menu-card{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;border-radius:28px;padding:22px;border:1px solid rgba(255,255,255,.75);box-shadow:0 18px 45px rgba(16,32,51,.18);color:#fff;background:#1e88e5;isolation:isolate;}
+.menu-card::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.32),rgba(255,255,255,0) 42%);z-index:-1}.menu-card::after{content:"";position:absolute;inset:auto -20% -42% -20%;height:60%;background:rgba(255,255,255,.12);filter:blur(20px);z-index:-1}.menu-card.adult{background:linear-gradient(150deg,#0f5ea8,#1e88e5 58%,#67b7ff)}.menu-card.paediatric{background:linear-gradient(150deg,#7b3fc5,#e64a8a 58%,#ffb347)}.menu-card-title{font-size:clamp(28px,8.2vw,52px);font-weight:950;line-height:1.02;letter-spacing:-.04em;text-shadow:0 2px 16px rgba(0,0,0,.18)}.version-chip{position:absolute;right:16px;bottom:14px;font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.62;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:4px 8px;color:#fff}
+/* Paediatric age menu */
+.age-screen{align-items:stretch;background:linear-gradient(160deg,#f6efff,#fff7fb)}.age-wrap{width:100%;max-width:780px;min-height:100dvh;margin:0 auto;padding:calc(10px + var(--safe-top)) 12px calc(10px + var(--safe-bottom));display:grid;grid-template-rows:auto 1fr auto;gap:10px}.page-title{text-align:center;margin:0;padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.86);box-shadow:var(--shadow);font-size:clamp(22px,6vw,34px);font-weight:950;letter-spacing:-.035em}.age-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}.age-card{background:#fff;border:1px solid rgba(16,32,51,.1);border-radius:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;gap:5px;color:var(--ink)}.age-icon-shell{width:clamp(86px,28vw,132px);height:clamp(86px,28vw,132px);border-radius:28px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(145deg,#fff,#f3ecff);box-shadow:inset 0 0 0 1px rgba(123,63,197,.15),0 10px 22px rgba(16,32,51,.1)}.age-icon-img{width:112%;height:112%;display:block;object-fit:cover}.age-emoji{font-size:clamp(30px,10vw,54px);line-height:1}.age-icon-img+.age-emoji{display:none}.age-label{font-size:clamp(17px,4.8vw,28px);font-weight:950;letter-spacing:-.03em}.age-range{font-size:clamp(13px,3.6vw,18px);font-weight:800;color:var(--muted)}.footer-row{display:grid;grid-template-columns:1fr;gap:10px}.nav-button{min-height:54px;border-radius:16px;background:#e9edf3;color:var(--ink);font-weight:900;font-size:18px;box-shadow:0 5px 15px rgba(16,32,51,.08)}
+/* Entry screen */
+.entry-screen{align-items:stretch}.entry-layout{width:100%;max-width:680px;min-height:100dvh;margin:0 auto;padding:calc(10px + var(--safe-top)) 10px calc(10px + var(--safe-bottom));display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;}.entry-title{margin:0;text-align:center;border-radius:18px;background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.09);box-shadow:var(--shadow);padding:12px 14px;font-size:clamp(22px,6vw,32px);font-weight:950;letter-spacing:-.035em}.entry-title.header-adult,.page-title.header-adult{background:linear-gradient(150deg,#0f5ea8,#1e88e5 58%,#67b7ff);color:#fff;border-color:rgba(255,255,255,.55);text-shadow:0 2px 14px rgba(0,0,0,.18)}.entry-title.header-paediatric,.page-title.header-paediatric{background:linear-gradient(150deg,#7b3fc5,#e64a8a 58%,#ffb347);color:#fff;border-color:rgba(255,255,255,.55);text-shadow:0 2px 14px rgba(0,0,0,.18)}.step-card{background:rgba(255,255,255,.9);border:1px solid rgba(0,0,0,.1);border-radius:20px;box-shadow:var(--shadow);padding:13px;text-align:center;transition:background .18s ease,border-color .18s ease}.step-card.parameter-adult{background:linear-gradient(180deg,#eef7ff,#ffffff);border-color:#b7d9f8;box-shadow:0 8px 24px rgba(30,136,229,.14)}.step-card.parameter-paediatric{background:linear-gradient(180deg,#fff0f7,#fffaf0);border-color:#f0b5d2;box-shadow:0 8px 24px rgba(230,74,138,.14)}.step-count{font-size:13px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}.step-card.parameter-adult .step-count{color:#0f5ea8}.step-card.parameter-paediatric .step-count{color:#8b2f86}.parameter-title{font-size:clamp(25px,7vw,38px);font-weight:950;letter-spacing:-.04em}.step-card.parameter-adult .parameter-title{color:#063e73}.step-card.parameter-paediatric .parameter-title{color:#5f246c}.option-list{min-height:0;overflow:auto;padding-bottom:2px;display:flex;flex-direction:column;gap:9px}.range-button{width:100%;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;min-height:64px;border:2px solid rgba(0,0,0,.08);border-left-width:12px;border-radius:18px;padding:11px 14px;background:#fff;color:#111;box-shadow:0 4px 14px rgba(16,32,51,.08);text-align:left;}.range-main{display:flex;flex-direction:column;gap:2px;min-width:0}.range-display{font-size:clamp(18px,5vw,26px);font-weight:950;color:#111;line-height:1.05}.range-sub{font-size:13px;color:#384554;font-weight:750}.score-pill{min-width:72px;border-radius:999px;border:1px solid rgba(0,0,0,.16);background:rgba(255,255,255,.7);padding:8px 9px;text-align:center;font-size:15px;font-weight:950;color:#111}
+/* Restore colour-coded answer rows during parameter entry. These rules sit after .range-button so they are not overridden by the default white button background. */
+.range-button.b-white{background:#f7f8fa;border-left-color:#b8c0ca;color:#111}.range-button.b-yellow{background:var(--soft-yellow);border-left-color:var(--yellow);color:#111}.range-button.b-orange{background:var(--soft-orange);border-left-color:var(--orange);color:#111}.range-button.b-red{background:var(--soft-red);border-left-color:var(--red);color:#111}.range-button.b-blue{background:var(--soft-blue);border-left-color:var(--blue);color:#111}.range-button:hover,.range-button:focus{outline:3px solid rgba(30,136,229,.20);outline-offset:1px;filter:saturate(1.04)}.range-button:active{transform:translateY(1px)}.entry-hint{margin:2px 4px 0;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid rgba(95,36,108,.18);color:#5f246c;text-align:center;font-weight:850;font-size:14px;box-shadow:0 4px 14px rgba(16,32,51,.05)}.entry-hint strong{font-weight:950}
+.bottom-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch}.bottom-bar .nav-button{width:100%;height:56px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.58);color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.16)}.bottom-bar.adult-nav .nav-button{background:linear-gradient(150deg,#0f5ea8,#1e88e5 62%,#67b7ff);box-shadow:0 8px 20px rgba(30,136,229,.20)}.bottom-bar.paediatric-nav .nav-button{background:linear-gradient(150deg,#7b3fc5,#e64a8a 58%,#ffb347);box-shadow:0 8px 20px rgba(230,74,138,.20)}.footer-row .nav-button{background:linear-gradient(150deg,#7b3fc5,#e64a8a 58%,#ffb347);color:#fff;border:1px solid rgba(255,255,255,.58);box-shadow:0 8px 20px rgba(230,74,138,.20)}
+/* Summary */
+.summary-screen{align-items:flex-start}.summary-layout{width:100%;max-width:680px;margin:0 auto;padding:calc(10px + var(--safe-top)) 10px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:10px}.status-panel{margin:0;padding:8px;border:1px solid rgba(0,0,0,.12);border-radius:16px;background:rgba(255,255,255,.92);box-shadow:var(--shadow)}.result-box{margin:0;padding:14px 10px;text-align:center;font-size:clamp(22px,7vw,34px);font-weight:950;border:2px solid #2a3440;border-radius:12px;background:#fff;letter-spacing:-.025em}.result-box.met-alert{background:linear-gradient(135deg,#1e88e5,#0759b8);color:#fff;border-color:#0c5aa8;text-transform:uppercase}.result-box.emergency-mega{min-height:clamp(150px,34dvh,260px);display:flex;align-items:center;justify-content:center;font-size:clamp(72px,27vw,150px);font-weight:1000;letter-spacing:.05em;border-width:4px;border-radius:22px;box-shadow:0 12px 42px rgba(30,136,229,.46);animation:ewsEmergencyFlash .85s ease-in-out infinite}.action-box{margin-top:8px;padding:10px;text-align:center;font-size:15px;font-weight:850;border-radius:10px;background:rgba(255,255,255,.78)}.alarm-silence{width:100%;margin-top:8px;border:0;border-radius:12px;padding:11px 12px;font-size:15px;font-weight:950;background:#eff6ff;color:#0b3b73;box-shadow:inset 0 0 0 1px rgba(30,136,229,.28)}.alarm-silence.hidden{display:none}.alarm-silence:active{transform:translateY(1px)}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 4px 16px rgba(16,32,51,.07)}.detail-grid.hidden{display:none}.detail-box{background:#f8fbff;border:1px solid var(--line);border-radius:12px;padding:9px;text-align:center}.detail-label{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.06em}.detail-value{font-size:18px;font-weight:950;margin-top:2px}@-webkit-keyframes ewsEmergencyFlash{0%,100%{opacity:1;-webkit-transform:scale(1);transform:scale(1);background:linear-gradient(135deg,#0c5aa8,#1e88e5);box-shadow:0 12px 42px rgba(30,136,229,.52),0 0 0 0 rgba(30,136,229,.20)}50%{opacity:.78;-webkit-transform:scale(1.035);transform:scale(1.035);background:linear-gradient(135deg,#64b5f6,#0c5aa8);box-shadow:0 24px 80px rgba(30,136,229,.95),0 0 0 10px rgba(30,136,229,.22)}}@keyframes ewsEmergencyFlash{0%,100%{opacity:1;-webkit-transform:scale(1);transform:scale(1);background:linear-gradient(135deg,#0c5aa8,#1e88e5);box-shadow:0 12px 42px rgba(30,136,229,.52),0 0 0 0 rgba(30,136,229,.20)}50%{opacity:.78;-webkit-transform:scale(1.035);transform:scale(1.035);background:linear-gradient(135deg,#64b5f6,#0c5aa8);box-shadow:0 24px 80px rgba(30,136,229,.95),0 0 0 10px rgba(30,136,229,.22)}}.summary-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(16,32,51,.07)}.summary-table th,.summary-table td{padding:10px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px;vertical-align:middle}.summary-table th{background:#f0f5fa;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#485568}.summary-table tr:last-child td{border-bottom:0}.summary-score{font-weight:950;text-align:center;white-space:nowrap}.summary-actions{display:grid;grid-template-columns:1fr;gap:10px}.summary-actions.two{grid-template-columns:1fr 1fr}.summary-actions.three{grid-template-columns:1fr;}
 /* Help modal */
-#helpBtn{ background:var(--blue); color:#fff; width:100%; margin-top:12px; padding:10px 12px; border:none; border-radius:12px; font-size:15px; cursor:pointer; }
-.modal{ display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); padding:16px; }
-.modal-content{ background:#fff; margin:24px auto; padding:16px; border-radius:14px; width:100%; max-width:620px; max-height:84%; overflow-y:auto; position:relative; box-shadow:var(--shadow); }
-.close{ position:absolute; right:12px; top:8px; font-size:26px; font-weight:bold; cursor:pointer; }
-.modal-content h3{ margin-top:0; }
-.modal-content li{ margin-bottom:8px; }
-
-@media (max-width:520px){
-  body{ padding:10px; }
-  h2{ font-size:20px; }
-  .toolbar{ align-items:flex-start; }
-  .header-row{ display:none; }
-  .form-row{ grid-template-columns:1fr auto; gap:8px; padding:10px; }
-  .form-row label{ grid-column:1 / -1; font-size:16px; }
-  .input-wrap{ grid-column:1; }
-  .badge{ grid-column:2; width:96px; }
-  #result{ font-size:19px; padding:11px 8px; }
-  .meta-row{ font-size:11.5px; }
-}
+.modal{display:none;position:fixed;z-index:5000;inset:0;background:rgba(0,0,0,.82);padding:18px;align-items:center;justify-content:center}.modal.open{display:flex}.modal-panel{width:100%;max-width:720px;max-height:86dvh;background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;display:grid;grid-template-rows:auto 1fr}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;font-size:20px;font-weight:950}.close-button{width:44px;height:44px;border-radius:12px;background:#e9edf3;font-size:24px;font-weight:950;color:var(--ink)}.modal-body{overflow:auto;padding:14px}.legend-section{margin-bottom:16px}.legend-section h4{margin:0 0 8px;font-size:16px}.legend-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}.legend-table th,.legend-table td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}.legend-table td{white-space:pre-line}.escalation-prompt{padding:10px 12px;border-radius:12px;background:#fff8e6;border:1px solid #f4d48d;font-weight:800;margin-bottom:10px}.legend-table th{background:#f0f5fa;font-size:12px;text-transform:uppercase;letter-spacing:.05em}.legend-table tr:last-child td{border-bottom:0}
+/* Respiratory distress long-press assessment guide */
+.guide-panel{max-width:820px;max-height:90dvh}.guide-intro{margin:0 0 10px;color:var(--muted);font-size:13px;font-weight:750}.distress-guide-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}.distress-guide-table th,.distress-guide-table td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:8px;vertical-align:top}.distress-guide-table th{background:#f0f5fa;font-size:12px;text-transform:uppercase;letter-spacing:.05em}.distress-guide-table th:last-child,.distress-guide-table td:last-child{border-right:0}.distress-guide-table tr:last-child td{border-bottom:0}.guide-row-label{font-weight:950;color:#24313e;width:24%}.guide-cell{min-width:0;cursor:pointer;touch-action:manipulation}.guide-cell.empty{background:#f7f8fa;color:#8a96a3;cursor:default}.guide-cell ul{margin:0;padding-left:18px}.guide-cell li{margin:3px 0;font-size:13px}.guide-cell.selected{outline:3px solid rgba(30,136,229,.35);outline-offset:-4px;box-shadow:inset 0 0 0 2px rgba(30,136,229,.42)}.guide-cell.severity-mild{background:#fffceb}.guide-cell.severity-moderate{background:#fff2df}.guide-cell.severity-severe{background:#ffe8ed}.guide-note{margin:10px 0 0;padding:10px;border-radius:12px;background:#eef6ff;border:1px solid #c8def4;color:#23364a;font-size:13px;font-weight:800}.guide-suggestion{margin:12px 0 0;padding:12px;border-radius:14px;background:linear-gradient(180deg,#fff,#f8fbff);border:2px solid #d9e3ee;color:#1f2d3a;text-align:center;box-shadow:0 4px 16px rgba(16,32,51,.08)}.guide-suggestion .suggestion-label{font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;color:#667381}.guide-suggestion .suggestion-value{margin-top:3px;font-size:22px;font-weight:1000;letter-spacing:-.03em}.guide-suggestion.none .suggestion-value{color:#667381}.guide-suggestion.mild{border-color:#f5d247;background:#fffceb}.guide-suggestion.moderate{border-color:#fb8c00;background:#fff2df}.guide-suggestion.severe{border-color:#e53935;background:#ffe8ed}.guide-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.guide-actions .nav-button{min-height:52px}.guide-continue{background:linear-gradient(150deg,#7b3fc5,#e64a8a 58%,#ffb347)!important;color:#fff}.guide-cancel{background:#e9edf3!important;color:#182026!important}@media(max-width:620px){.distress-guide-table{font-size:12px}.distress-guide-table th,.distress-guide-table td{padding:6px}.guide-cell li{font-size:12px}.guide-row-label{width:22%}}
+@media(max-width:520px){.menu-wrap{gap:10px;padding-left:10px;padding-right:10px}.menu-card{border-radius:24px;padding:16px}.entry-layout{gap:8px}.range-button{min-height:58px;border-left-width:10px;padding:10px 12px}.score-pill{min-width:64px;font-size:14px}.detail-grid{grid-template-columns:1fr 1fr}.summary-actions.two{grid-template-columns:1fr 1fr}}
+@media(max-height:700px){.page-title{padding:7px 10px;font-size:22px}.age-grid{gap:8px}.age-card{padding:8px;border-radius:18px}.age-icon-shell{width:74px;height:74px;border-radius:20px}.age-emoji{font-size:32px}.age-label{font-size:18px}.age-range{font-size:13px}.nav-button{min-height:48px}}
 </style>
 </head>
 <body class="zone-white">
-<h2>CCDHB EWS – Single Patient</h2>
+<section id="mainMenu" class="screen menu-screen active" aria-label="Main menu"><div class="menu-wrap"><button id="adultBtn" class="menu-card adult" type="button"><span class="menu-card-title">NZ Adult EWS</span></button><button id="paedBtn" class="menu-card paediatric" type="button"><span class="menu-card-title">NZ Paediatric EWS</span><span class="version-chip">v60</span></button></div></section>
+<section id="ageMenu" class="screen age-screen" aria-label="Paediatric age range menu"><div class="age-wrap"><h1 class="page-title header-paediatric">Choose paediatric age range</h1><div id="ageGrid" class="age-grid"></div><div class="footer-row"><button id="ageBackBtn" class="nav-button" type="button">←</button></div></div></section>
+<section id="entryScreen" class="screen entry-screen" aria-label="EWS entry"><div class="entry-layout"><h1 id="entryTitle" class="entry-title">NZ Adult EWS</h1><section id="stepCard" class="step-card"><div id="stepCount" class="step-count">Item 1 of 7</div><div id="parameterTitle" class="parameter-title">Parameter</div></section><div id="optionList" class="option-list"></div><div id="bottomBar" class="bottom-bar"><button id="entryBackBtn" class="nav-button" type="button">←</button><button id="helpBtn" class="nav-button" type="button">Help</button></div></div></section>
+<section id="summaryScreen" class="screen summary-screen" aria-label="Summary"><div class="summary-layout"><div class="status-panel"><div id="summaryResult" class="result-box">EWS: —</div><div id="summaryAction" class="action-box">Mandatory Action: —</div><button id="silenceAlarmBtn" class="alarm-silence hidden" type="button">Silence alarm</button></div><div id="summaryDetails" class="detail-grid"></div><table class="summary-table"><thead><tr><th>Observation</th><th>Value</th><th>Score</th></tr></thead><tbody id="summaryRows"></tbody></table><div id="summaryActions" class="summary-actions"></div></div></section>
+<div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-panel"><div class="modal-head"><h3 id="helpTitle">Help</h3><button id="closeHelpBtn" class="close-button" type="button" aria-label="Close help">×</button></div><div id="helpBody" class="modal-body"></div></div></div>
+<div id="respDistressGuideModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="respDistressGuideTitle"><div class="modal-panel guide-panel"><div class="modal-head"><h3 id="respDistressGuideTitle">Assessment of respiratory distress guide</h3><button id="closeRespGuideBtn" class="close-button" type="button" aria-label="Close respiratory distress guide">×</button></div><div id="respGuideBody" class="modal-body"></div></div></div>
+<script id="embedded-config" type="application/json">{"schemaVersion":"1.0","configId":"nz-ews-config","configVersion":"2026-05-23-draft-v60","displayName":"NZ Adult EWS and Paediatric PEWS Configuration","status":"draft","country":"NZ","clinicalSafetyNotice":"Draft configuration for application development and local verification. Do not use for clinical decision-making until checked against the current local chart and policy.","sourceNotes":[{"id":"adult-nzews-hqsc-chart","systemId":"adult-ews","title":"Adult Vital Signs Chart with New Zealand Early Warning Score","publisher":"Te Tāhū Hauora Health Quality & Safety Commission","dateAccessed":"2026-05-23","url":"https://www.hqsc.govt.nz/resources/resource-library/vital-signs-chart-with-new-zealand-early-warning-score/","notes":"Adult non-maternity NZEWS chart. Local escalation action text remains configurable."},{"id":"pews-user-guide-2023","systemId":"nz-pews","title":"Aotearoa New Zealand national paediatric early warning system and paediatric vital signs chart: User guide","publisher":"Te Tāhū Hauora Health Quality & Safety Commission","dateAccessed":"2026-05-23","url":"https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/Paediatric-vital-signs-chart-user-guide-2023.pdf","notes":"Defines the four paediatric age-based PVSCs and seven scoring parameters."},{"id":"pews-reminders-2025","systemId":"nz-pews","title":"Reminders for the Paediatric Early Warning System","publisher":"Te Tāhū Hauora Health Quality & Safety Commission","dateAccessed":"2026-05-23","url":"https://www.hqsc.govt.nz/assets/Our-work/Improved-service-delivery/Patient-deterioration/Publications-resources/PEWS-toolkit/Reminders-paediatric-early-warning-system.pdf","notes":"Applies current updates to 5–11 years lower systolic BP and 12+ years upper heart rate and lower systolic BP."},{"id":"te-wao-nui-pews-pathway-photo","systemId":"nz-pews","title":"Mandatory escalation pathway - Te Wao Nui Child Health Service","publisher":"Local paediatric flow sheet / Te Wao Nui Child Health Service","dateAccessed":"2026-05-24","url":"","notes":"Local paediatric mandatory escalation pathway transcribed from user-provided PEWS flow sheet image. Requires local verification before clinical use."},{"id":"te-wao-nui-local-pews-charts-2024","systemId":"nz-pews","title":"Te Wao Nui Child Health Service local paediatric vital signs charts","publisher":"Te Wao Nui Child Health Service / Health New Zealand Te Whatu Ora","dateAccessed":"2026-05-25","url":"","notes":"Local PEWS vital sign scoring ranges transcribed from user-provided chart photographs for 0–11 months, 1–4 years, 5–11 years and 12+ years. Requires local verification before clinical use."}],"display":{"theme":"clinical-friendly","zoneColours":{"white":"#ffffff","yellow":"#fff3a6","orange":"#ffd59e","red":"#f7b5c7","blue":"#cfe3ff"}},"systems":[{"id":"adult-ews","label":"NZ Adult EWS","shortLabel":"Adult EWS","description":"New Zealand adult EWS scoring matched to the previous adult-only CCDHB EWS app baseline.","patientGroup":"adult","sourceNoteIds":["adult-nzews-hqsc-chart"],"ageSelection":{"method":"single-band"},"scoreBehaviour":{"blueZoneOverridesTotal":true,"redZoneCanEscalateRegardlessOfTotal":true,"incompleteScoreSuffix":"+","nonScoringObservationsAllowed":true,"metScoreThreshold":10,"requireCompleteDefault":false,"emergencyDisplayLabel":"MET"},"ageBands":[{"id":"adult","label":"Adult","shortLabel":"Adult","minAgeMonths":null,"maxAgeMonths":null,"graphic":{"type":"local-svg","src":"assets/age-groups/adult.svg","emojiFallback":"🧑","alt":"Adult age group"},"parameters":[{"id":"respiratory-rate","label":"Resp Rate","shortLabel":"RR","type":"numeric","unit":"/min","scored":true,"usualMin":0,"usualMax":80,"ranges":[{"id":"rr-blue-low","min":null,"max":4,"score":"blue","zone":"blue","display":"<5","reason":"RR <5"},{"id":"rr-low-3","min":5,"max":8,"score":3,"zone":"red","display":"5–8","reason":"RR 5–8"},{"id":"rr-low-1","min":9,"max":11,"score":1,"zone":"yellow","display":"9–11","reason":"RR 9–11"},{"id":"rr-normal","min":12,"max":20,"score":0,"zone":"white","display":"12–20","reason":"RR 12–20"},{"id":"rr-high-2","min":21,"max":24,"score":2,"zone":"orange","display":"21–24","reason":"RR 21–24"},{"id":"rr-high-3","min":25,"max":35,"score":3,"zone":"red","display":"25–35","reason":"RR 25–35"},{"id":"rr-blue-high","min":36,"max":null,"score":"blue","zone":"blue","display":">35","reason":"RR >35"}]},{"id":"oxygen-supplementation","label":"Sup O₂","shortLabel":"O₂","type":"option","unit":"","scored":true,"options":[{"id":"no","label":"No","score":0,"zone":"white","reason":"No supplemental O₂"},{"id":"yes","label":"Yes","score":2,"zone":"orange","reason":"Supplemental O₂"}]},{"id":"oxygen-saturation","label":"SpO₂ %","shortLabel":"SpO₂","type":"numeric","unit":"%","scored":true,"usualMin":0,"usualMax":100,"ranges":[{"id":"spo2-low-3","min":null,"max":91,"score":3,"zone":"red","display":"≤91%","reason":"SpO₂ ≤91%"},{"id":"spo2-low-2","min":92,"max":93,"score":2,"zone":"orange","display":"92–93%","reason":"SpO₂ 92–93%"},{"id":"spo2-low-1","min":94,"max":95,"score":1,"zone":"yellow","display":"94–95%","reason":"SpO₂ 94–95%"},{"id":"spo2-normal","min":96,"max":null,"score":0,"zone":"white","display":"≥96%","reason":"SpO₂ ≥96%"}]},{"id":"temperature","label":"Temp (°C)","shortLabel":"Temp","type":"numeric","unit":"°C","scored":true,"usualMin":25,"usualMax":45,"ranges":[{"id":"temp-low-2","min":null,"max":34.9,"score":2,"zone":"orange","display":"≤34.9","reason":"Temp ≤34.9°C"},{"id":"temp-low-1","min":35.0,"max":35.9,"score":1,"zone":"yellow","display":"35.0–35.9","reason":"Temp 35.0–35.9°C"},{"id":"temp-normal","min":36.0,"max":37.9,"score":0,"zone":"white","display":"36.0–37.9","reason":"Temp 36.0–37.9°C"},{"id":"temp-high-1","min":38.0,"max":38.9,"score":1,"zone":"yellow","display":"38.0–38.9","reason":"Temp 38.0–38.9°C"},{"id":"temp-high-2","min":39.0,"max":null,"score":2,"zone":"orange","display":"≥39.0","reason":"Temp ≥39.0°C"}]},{"id":"systolic-blood-pressure","label":"Systolic BP","shortLabel":"SBP","type":"numeric","unit":"mmHg","scored":true,"usualMin":0,"usualMax":300,"ranges":[{"id":"sbp-blue-low","min":null,"max":69,"score":"blue","zone":"blue","display":"≤69","reason":"SBP ≤69"},{"id":"sbp-low-3","min":70,"max":89,"score":3,"zone":"red","display":"70–89","reason":"SBP 70–89"},{"id":"sbp-low-2","min":90,"max":99,"score":2,"zone":"orange","display":"90–99","reason":"SBP 90–99"},{"id":"sbp-low-1","min":100,"max":109,"score":1,"zone":"yellow","display":"100–109","reason":"SBP 100–109"},{"id":"sbp-normal","min":110,"max":219,"score":0,"zone":"white","display":"110–219","reason":"SBP 110–219"},{"id":"sbp-high-3","min":220,"max":null,"score":3,"zone":"red","display":"≥220","reason":"SBP ≥220"}]},{"id":"heart-rate","label":"Heart Rate","shortLabel":"HR","type":"numeric","unit":"/min","scored":true,"usualMin":0,"usualMax":300,"ranges":[{"id":"hr-blue-low","min":null,"max":39,"score":"blue","zone":"blue","display":"≤39","reason":"HR ≤39"},{"id":"hr-low-2","min":40,"max":49,"score":2,"zone":"orange","display":"40–49","reason":"HR 40–49"},{"id":"hr-normal","min":50,"max":89,"score":0,"zone":"white","display":"50–89","reason":"HR 50–89"},{"id":"hr-high-1","min":90,"max":110,"score":1,"zone":"yellow","display":"90–110","reason":"HR 90–110"},{"id":"hr-high-2","min":111,"max":129,"score":2,"zone":"orange","display":"111–129","reason":"HR 111–129"},{"id":"hr-high-3","min":130,"max":139,"score":3,"zone":"red","display":"130–139","reason":"HR 130–139"},{"id":"hr-blue-high","min":140,"max":null,"score":"blue","zone":"blue","display":"≥140","reason":"HR ≥140"}]},{"id":"level-of-consciousness","label":"LOC","shortLabel":"LOC","type":"option","unit":"","scored":true,"options":[{"id":"alert","label":"Alert","score":0,"zone":"white","reason":"Alert"},{"id":"voice-or-pain","label":"Voice or Pain","score":3,"zone":"red","reason":"Responds to voice or pain"},{"id":"unresponsive-fitting","label":"Unresponsive/fitting","score":"blue","zone":"blue","reason":"Unresponsive/fitting"}]}],"nonScoringObservations":[{"id":"patient-family-staff-concern","label":"Patient/family/staff concern","type":"option","scored":false,"safetyOverride":true,"options":[{"id":"no","label":"No concern"},{"id":"yes","label":"Concern present","action":"Escalate regardless of vital signs or EWS."}]}]}],"escalationBands":[{"id":"ews-0","minScore":0,"maxScore":0,"label":"EWS 0","colour":"white","actionTitle":"No mandatory action","actionText":"Mandatory Action: —"},{"id":"ews-1-5","minScore":1,"maxScore":5,"label":"EWS 1–5","colour":"yellow","actionTitle":"Increase monitoring","actionText":"Mandatory Action: Manage pain/fever/distress, increase monitoring frequency"},{"id":"ews-6-7","minScore":6,"maxScore":7,"label":"EWS 6–7","colour":"orange","actionTitle":"House officer review","actionText":"Mandatory Action: House officer review within 60 min, inform nurse in charge, refer to PAR nurse"},{"id":"ews-8-9-or-red","minScore":8,"maxScore":9,"label":"EWS 8–9 or any red parameter","colour":"red","actionTitle":"Registrar review","actionText":"Mandatory Action: Registrar review within 20 min, consider ICU referral"},{"id":"ews-10-plus-or-blue","minScore":10,"maxScore":null,"trigger":"score-10-plus-or-any-blue-zone","label":"EWS ≥10 or blue-zone trigger","colour":"blue","actionTitle":"MET call","actionText":"Mandatory Action: Dial 777, call MET, support ABC"}]},{"id":"nz-pews","label":"NZ Paediatric EWS","shortLabel":"PEWS","description":"Aotearoa New Zealand national paediatric early warning system with four age-banded paediatric vital signs charts.","patientGroup":"paediatric","sourceNoteIds":["pews-user-guide-2023","pews-reminders-2025","te-wao-nui-pews-pathway-photo","te-wao-nui-local-pews-charts-2024"],"ageSelection":{"method":"age-band","unit":"months"},"scoreBehaviour":{"blueZoneOverridesTotal":true,"incompleteScoreSuffix":"+","nonScoringObservationsAllowed":true,"emergencyDisplayLabel":"PET","escalationPrompt":"Escalate care for any patient you or their whānau are worried about, regardless of vital signs or PEWS."},"ageBands":[{"id":"infant-0-11-months","label":"0–11 months","shortLabel":"Infant","minAgeMonths":0,"maxAgeMonths":11,"graphic":{"type":"local-png","src":"assets/age-groups/infant.png","emojiFallback":"👶","alt":"Infant age group"},"parameters":[{"id":"respiratory-rate","label":"Respiratory rate","shortLabel":"RR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"rr-blue-low","min":null,"max":9,"score":"blue","zone":"blue","display":"≤9","reason":"≤9"},{"id":"rr-low-4","min":10,"max":19,"score":4,"zone":"red","display":"10–19","reason":"10–19"},{"id":"rr-low-2","min":20,"max":24,"score":2,"zone":"orange","display":"20–24","reason":"20–24"},{"id":"rr-low-1","min":25,"max":29,"score":1,"zone":"yellow","display":"25–29","reason":"25–29"},{"id":"rr-normal","min":30,"max":49,"score":0,"zone":"white","display":"30–49","reason":"30–49"},{"id":"rr-high-1","min":50,"max":54,"score":1,"zone":"yellow","display":"50–54","reason":"50–54"},{"id":"rr-high-2","min":55,"max":69,"score":2,"zone":"orange","display":"55–69","reason":"55–69"},{"id":"rr-high-4","min":70,"max":null,"score":4,"zone":"red","display":"≥70","reason":"≥70"}]},{"id":"respiratory-distress","label":"Respiratory distress","shortLabel":"WOB","type":"option","scored":true,"options":[{"id":"nil","label":"Nil","score":0,"zone":"white"},{"id":"mild","label":"Mild","score":1,"zone":"yellow"},{"id":"moderate","label":"Moderate","score":2,"zone":"orange"},{"id":"severe","label":"Severe","score":4,"zone":"red"}],"assessmentGuide":{"title":"Assessment of respiratory distress guide","scoringRule":"Score at the level of severest sign.","note":"Note that not all features are relevant to all conditions.","columns":[{"id":"mild","label":"Mild","scoreOptionId":"mild"},{"id":"moderate","label":"Moderate","scoreOptionId":"moderate"},{"id":"severe","label":"Severe","scoreOptionId":"severe"}],"rows":[{"id":"airway","label":"Airway","mild":["Stridor on exertion or crying","Wheeze present"],"moderate":["Some stridor at rest","Wheeze marked"],"severe":["Stridor at rest","New onset of stridor","Wheeze severe","Silent chest"]},{"id":"behaviour-feeding","label":"Behaviour and feeding","mild":["Normal","Talks in sentences"],"moderate":["Some or intermittent irritability","Difficulty talking or crying","Difficulty feeding or eating"],"severe":["Increased irritability and/or lethargy","Looks exhausted","Unable to talk or cry","Unable to feed or eat"]},{"id":"accessory-muscle-use","label":"Accessory muscle use","mild":["Mild intercostal and suprasternal recession"],"moderate":["Moderate intercostal and suprasternal recession","Tracheal tug","Nasal flaring","Head bobbing"],"severe":["Marked intercostal and suprasternal recession"]},{"id":"other","label":"Other","mild":[],"moderate":["May have brief apnoea"],"severe":["Gasping, grunting","Extreme pallor, cyanosis","Increasingly frequent or prolonged apnoea"]}]}},{"id":"oxygen-requirement","label":"Oxygen requirement","shortLabel":"O₂","type":"option","scored":true,"options":[{"id":"room-air","label":"Room air / no respiratory support","score":0,"zone":"white"},{"id":"low-flow-or-hf-under-35","label":"<4 L/min oxygen or high flow FiO₂ <35%","score":2,"zone":"orange"},{"id":"four-plus-or-hf-35-plus","label":"≥4 L/min oxygen or high flow FiO₂ ≥35%","score":4,"zone":"red"}]},{"id":"oxygen-saturation","label":"Oxygen saturation","shortLabel":"SpO₂","type":"numeric","unit":"%","scored":true,"ranges":[{"id":"spo2-low-2","min":null,"max":90,"score":2,"zone":"orange","display":"≤90"},{"id":"spo2-low-1","min":91,"max":94,"score":1,"zone":"yellow","display":"91–94"},{"id":"spo2-normal","min":95,"max":null,"score":0,"zone":"white","display":"≥95"}]},{"id":"heart-rate","label":"Heart rate","shortLabel":"HR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"hr-blue-low","min":null,"max":59,"score":"blue","zone":"blue","display":"≤59"},{"id":"hr-low-4","min":60,"max":79,"score":4,"zone":"red","display":"60–79"},{"id":"hr-low-2","min":80,"max":89,"score":2,"zone":"orange","display":"80–89"},{"id":"hr-low-1","min":90,"max":109,"score":1,"zone":"yellow","display":"90–109"},{"id":"hr-normal","min":110,"max":159,"score":0,"zone":"white","display":"110–159"},{"id":"hr-high-1","min":160,"max":169,"score":1,"zone":"yellow","display":"160–169"},{"id":"hr-high-2","min":170,"max":179,"score":2,"zone":"orange","display":"170–179"},{"id":"hr-high-4","min":180,"max":null,"score":4,"zone":"red","display":"≥180"}]},{"id":"central-capillary-refill","label":"Central capillary refill","shortLabel":"CRT","type":"option","scored":true,"options":[{"id":"under-3-sec","label":"<3 sec","score":0,"zone":"white"},{"id":"3-sec-or-more","label":"≥3 sec","score":4,"zone":"red"}],"unit":"sec"},{"id":"systolic-blood-pressure","label":"Systolic blood pressure","shortLabel":"SBP","type":"numeric","unit":"mmHg","scored":true,"ranges":[{"id":"sbp-blue-low","min":null,"max":49,"score":"blue","zone":"blue","display":"≤49","reason":"≤49"},{"id":"sbp-low-4","min":50,"max":54,"score":4,"zone":"red","display":"50–54","reason":"50–54"},{"id":"sbp-low-2","min":55,"max":64,"score":2,"zone":"orange","display":"55–64","reason":"55–64"},{"id":"sbp-low-1","min":65,"max":74,"score":1,"zone":"yellow","display":"65–74","reason":"65–74"},{"id":"sbp-normal","min":75,"max":99,"score":0,"zone":"white","display":"75–99","reason":"75–99"},{"id":"sbp-high-1","min":100,"max":119,"score":1,"zone":"yellow","display":"100–119","reason":"100–119"},{"id":"sbp-high-2","min":120,"max":149,"score":2,"zone":"orange","display":"120–149","reason":"120–149"},{"id":"sbp-high-4","min":150,"max":null,"score":4,"zone":"red","display":"≥150","reason":"≥150"}]}],"nonScoringObservations":[{"id":"whanau-concern","label":"Whānau concern","type":"option","scored":false,"safetyOverride":true,"options":[{"id":"no","label":"No concern"},{"id":"yes","label":"Concern present","action":"Escalate regardless of PEWS score."},{"id":"absent","label":"Whānau absent"}]},{"id":"level-of-consciousness","label":"Level of consciousness","type":"option","scored":false,"options":[{"id":"alert","label":"Alert"},{"id":"voice","label":"Voice"},{"id":"pain","label":"Pain"},{"id":"unresponsive","label":"Unresponsive"},{"id":"asleep","label":"Asleep"}]},{"id":"temperature","label":"Temperature","type":"numeric","unit":"°C","scored":false},{"id":"pain-score","label":"Pain score","type":"numeric","unit":"/10","scored":false}]},{"id":"preschool-1-4-years","label":"1–4 years","shortLabel":"Preschool","minAgeMonths":12,"maxAgeMonths":59,"graphic":{"type":"local-png","src":"assets/age-groups/preschool.png","emojiFallback":"🧸","alt":"Preschool age group"},"parameters":[{"id":"respiratory-rate","label":"Respiratory rate","shortLabel":"RR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"rr-blue-low","min":null,"max":4,"score":"blue","zone":"blue","display":"≤4","reason":"≤4"},{"id":"rr-low-4","min":5,"max":14,"score":4,"zone":"red","display":"5–14","reason":"5–14"},{"id":"rr-low-2","min":15,"max":17,"score":2,"zone":"orange","display":"15–17","reason":"15–17"},{"id":"rr-low-1","min":18,"max":19,"score":1,"zone":"yellow","display":"18–19","reason":"18–19"},{"id":"rr-normal","min":20,"max":39,"score":0,"zone":"white","display":"20–39","reason":"20–39"},{"id":"rr-high-1","min":40,"max":44,"score":1,"zone":"yellow","display":"40–44","reason":"40–44"},{"id":"rr-high-2","min":45,"max":54,"score":2,"zone":"orange","display":"45–54","reason":"45–54"},{"id":"rr-high-4","min":55,"max":null,"score":4,"zone":"red","display":"≥55","reason":"≥55"}]},{"id":"respiratory-distress","label":"Respiratory distress","shortLabel":"WOB","type":"option","scored":true,"options":[{"id":"nil","label":"Nil","score":0,"zone":"white"},{"id":"mild","label":"Mild","score":1,"zone":"yellow"},{"id":"moderate","label":"Moderate","score":2,"zone":"orange"},{"id":"severe","label":"Severe","score":4,"zone":"red"}],"assessmentGuide":{"title":"Assessment of respiratory distress guide","scoringRule":"Score at the level of severest sign.","note":"Note that not all features are relevant to all conditions.","columns":[{"id":"mild","label":"Mild","scoreOptionId":"mild"},{"id":"moderate","label":"Moderate","scoreOptionId":"moderate"},{"id":"severe","label":"Severe","scoreOptionId":"severe"}],"rows":[{"id":"airway","label":"Airway","mild":["Stridor on exertion or crying","Wheeze present"],"moderate":["Some stridor at rest","Wheeze marked"],"severe":["Stridor at rest","New onset of stridor","Wheeze severe","Silent chest"]},{"id":"behaviour-feeding","label":"Behaviour and feeding","mild":["Normal","Talks in sentences"],"moderate":["Some or intermittent irritability","Difficulty talking or crying","Difficulty feeding or eating"],"severe":["Increased irritability and/or lethargy","Looks exhausted","Unable to talk or cry","Unable to feed or eat"]},{"id":"accessory-muscle-use","label":"Accessory muscle use","mild":["Mild intercostal and suprasternal recession"],"moderate":["Moderate intercostal and suprasternal recession","Tracheal tug","Nasal flaring","Head bobbing"],"severe":["Marked intercostal and suprasternal recession"]},{"id":"other","label":"Other","mild":[],"moderate":["May have brief apnoea"],"severe":["Gasping, grunting","Extreme pallor, cyanosis","Increasingly frequent or prolonged apnoea"]}]}},{"id":"oxygen-requirement","label":"Oxygen requirement","shortLabel":"O₂","type":"option","scored":true,"options":[{"id":"room-air","label":"Room air / no respiratory support","score":0,"zone":"white"},{"id":"low-flow-or-hf-under-35","label":"<4 L/min oxygen or high flow FiO₂ <35%","score":2,"zone":"orange"},{"id":"four-plus-or-hf-35-plus","label":"≥4 L/min oxygen or high flow FiO₂ ≥35%","score":4,"zone":"red"}]},{"id":"oxygen-saturation","label":"Oxygen saturation","shortLabel":"SpO₂","type":"numeric","unit":"%","scored":true,"ranges":[{"id":"spo2-low-2","min":null,"max":90,"score":2,"zone":"orange","display":"≤90"},{"id":"spo2-low-1","min":91,"max":94,"score":1,"zone":"yellow","display":"91–94"},{"id":"spo2-normal","min":95,"max":null,"score":0,"zone":"white","display":"≥95"}]},{"id":"heart-rate","label":"Heart rate","shortLabel":"HR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"hr-blue-low","min":null,"max":59,"score":"blue","zone":"blue","display":"≤59","reason":"≤59"},{"id":"hr-low-4","min":60,"max":69,"score":4,"zone":"red","display":"60–69","reason":"60–69"},{"id":"hr-low-2","min":70,"max":79,"score":2,"zone":"orange","display":"70–79","reason":"70–79"},{"id":"hr-low-1","min":80,"max":89,"score":1,"zone":"yellow","display":"80–89","reason":"80–89"},{"id":"hr-normal","min":90,"max":139,"score":0,"zone":"white","display":"90–139","reason":"90–139"},{"id":"hr-high-1","min":140,"max":149,"score":1,"zone":"yellow","display":"140–149","reason":"140–149"},{"id":"hr-high-2","min":150,"max":159,"score":2,"zone":"orange","display":"150–159","reason":"150–159"},{"id":"hr-high-4","min":160,"max":null,"score":4,"zone":"red","display":"≥160","reason":"≥160"}]},{"id":"central-capillary-refill","label":"Central capillary refill","shortLabel":"CRT","type":"option","scored":true,"options":[{"id":"under-3-sec","label":"<3 sec","score":0,"zone":"white"},{"id":"3-sec-or-more","label":"≥3 sec","score":4,"zone":"red"}],"unit":"sec"},{"id":"systolic-blood-pressure","label":"Systolic blood pressure","shortLabel":"SBP","type":"numeric","unit":"mmHg","scored":true,"ranges":[{"id":"sbp-blue-low","min":null,"max":54,"score":"blue","zone":"blue","display":"≤54","reason":"≤54"},{"id":"sbp-low-4","min":55,"max":64,"score":4,"zone":"red","display":"55–64","reason":"55–64"},{"id":"sbp-low-2","min":65,"max":74,"score":2,"zone":"orange","display":"65–74","reason":"65–74"},{"id":"sbp-low-1","min":75,"max":89,"score":1,"zone":"yellow","display":"75–89","reason":"75–89"},{"id":"sbp-normal","min":90,"max":109,"score":0,"zone":"white","display":"90–109","reason":"90–109"},{"id":"sbp-high-1","min":110,"max":124,"score":1,"zone":"yellow","display":"110–124","reason":"110–124"},{"id":"sbp-high-2","min":125,"max":159,"score":2,"zone":"orange","display":"125–159","reason":"125–159"},{"id":"sbp-high-4","min":160,"max":null,"score":4,"zone":"red","display":"≥160","reason":"≥160"}]}],"nonScoringObservations":[{"id":"whanau-concern","label":"Whānau concern","type":"option","scored":false,"safetyOverride":true,"options":[{"id":"no","label":"No concern"},{"id":"yes","label":"Concern present","action":"Escalate regardless of PEWS score."},{"id":"absent","label":"Whānau absent"}]},{"id":"level-of-consciousness","label":"Level of consciousness","type":"option","scored":false,"options":[{"id":"alert","label":"Alert"},{"id":"voice","label":"Voice"},{"id":"pain","label":"Pain"},{"id":"unresponsive","label":"Unresponsive"},{"id":"asleep","label":"Asleep"}]},{"id":"temperature","label":"Temperature","type":"numeric","unit":"°C","scored":false},{"id":"pain-score","label":"Pain score","type":"numeric","unit":"/10","scored":false}]},{"id":"child-5-11-years","label":"5–11 years","shortLabel":"Child","minAgeMonths":60,"maxAgeMonths":143,"graphic":{"type":"local-png","src":"assets/age-groups/child.png","emojiFallback":"🎒","alt":"Child age group"},"parameters":[{"id":"respiratory-rate","label":"Respiratory rate","shortLabel":"RR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"rr-blue-low","min":null,"max":4,"score":"blue","zone":"blue","display":"≤4","reason":"≤4"},{"id":"rr-low-4","min":5,"max":11,"score":4,"zone":"red","display":"5–11","reason":"5–11"},{"id":"rr-low-2","min":12,"max":14,"score":2,"zone":"orange","display":"12–14","reason":"12–14"},{"id":"rr-low-1","min":15,"max":19,"score":1,"zone":"yellow","display":"15–19","reason":"15–19"},{"id":"rr-normal","min":20,"max":29,"score":0,"zone":"white","display":"20–29","reason":"20–29"},{"id":"rr-high-1","min":30,"max":34,"score":1,"zone":"yellow","display":"30–34","reason":"30–34"},{"id":"rr-high-2","min":35,"max":44,"score":2,"zone":"orange","display":"35–44","reason":"35–44"},{"id":"rr-high-4","min":45,"max":null,"score":4,"zone":"red","display":"≥45","reason":"≥45"}]},{"id":"respiratory-distress","label":"Respiratory distress","shortLabel":"WOB","type":"option","scored":true,"options":[{"id":"nil","label":"Nil","score":0,"zone":"white"},{"id":"mild","label":"Mild","score":1,"zone":"yellow"},{"id":"moderate","label":"Moderate","score":2,"zone":"orange"},{"id":"severe","label":"Severe","score":4,"zone":"red"}],"assessmentGuide":{"title":"Assessment of respiratory distress guide","scoringRule":"Score at the level of severest sign.","note":"Note that not all features are relevant to all conditions.","columns":[{"id":"mild","label":"Mild","scoreOptionId":"mild"},{"id":"moderate","label":"Moderate","scoreOptionId":"moderate"},{"id":"severe","label":"Severe","scoreOptionId":"severe"}],"rows":[{"id":"airway","label":"Airway","mild":["Stridor on exertion or crying","Wheeze present"],"moderate":["Some stridor at rest","Wheeze marked"],"severe":["Stridor at rest","New onset of stridor","Wheeze severe","Silent chest"]},{"id":"behaviour-feeding","label":"Behaviour and feeding","mild":["Normal","Talks in sentences"],"moderate":["Some or intermittent irritability","Difficulty talking or crying","Difficulty feeding or eating"],"severe":["Increased irritability and/or lethargy","Looks exhausted","Unable to talk or cry","Unable to feed or eat"]},{"id":"accessory-muscle-use","label":"Accessory muscle use","mild":["Mild intercostal and suprasternal recession"],"moderate":["Moderate intercostal and suprasternal recession","Tracheal tug","Nasal flaring","Head bobbing"],"severe":["Marked intercostal and suprasternal recession"]},{"id":"other","label":"Other","mild":[],"moderate":["May have brief apnoea"],"severe":["Gasping, grunting","Extreme pallor, cyanosis","Increasingly frequent or prolonged apnoea"]}]}},{"id":"oxygen-requirement","label":"Oxygen requirement","shortLabel":"O₂","type":"option","scored":true,"options":[{"id":"room-air","label":"Room air / no respiratory support","score":0,"zone":"white"},{"id":"low-flow-or-hf-under-35","label":"<4 L/min oxygen or high flow FiO₂ <35%","score":2,"zone":"orange"},{"id":"four-plus-or-hf-35-plus","label":"≥4 L/min oxygen or high flow FiO₂ ≥35%","score":4,"zone":"red"}]},{"id":"oxygen-saturation","label":"Oxygen saturation","shortLabel":"SpO₂","type":"numeric","unit":"%","scored":true,"ranges":[{"id":"spo2-low-2","min":null,"max":90,"score":2,"zone":"orange","display":"≤90"},{"id":"spo2-low-1","min":91,"max":94,"score":1,"zone":"yellow","display":"91–94"},{"id":"spo2-normal","min":95,"max":null,"score":0,"zone":"white","display":"≥95"}]},{"id":"heart-rate","label":"Heart rate","shortLabel":"HR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"hr-blue-low","min":null,"max":49,"score":"blue","zone":"blue","display":"≤49","reason":"≤49"},{"id":"hr-low-4","min":50,"max":59,"score":4,"zone":"red","display":"50–59","reason":"50–59"},{"id":"hr-low-2","min":60,"max":69,"score":2,"zone":"orange","display":"60–69","reason":"60–69"},{"id":"hr-low-1","min":70,"max":79,"score":1,"zone":"yellow","display":"70–79","reason":"70–79"},{"id":"hr-normal","min":80,"max":129,"score":0,"zone":"white","display":"80–129","reason":"80–129"},{"id":"hr-high-1","min":130,"max":139,"score":1,"zone":"yellow","display":"130–139","reason":"130–139"},{"id":"hr-high-2","min":140,"max":154,"score":2,"zone":"orange","display":"140–154","reason":"140–154"},{"id":"hr-high-4","min":155,"max":null,"score":4,"zone":"red","display":"≥155","reason":"≥155"}]},{"id":"central-capillary-refill","label":"Central capillary refill","shortLabel":"CRT","type":"option","scored":true,"options":[{"id":"under-3-sec","label":"<3 sec","score":0,"zone":"white"},{"id":"3-sec-or-more","label":"≥3 sec","score":4,"zone":"red"}],"unit":"sec"},{"id":"systolic-blood-pressure","label":"Systolic blood pressure","shortLabel":"SBP","type":"numeric","unit":"mmHg","scored":true,"ranges":[{"id":"sbp-blue-low","min":null,"max":54,"score":"blue","zone":"blue","display":"≤54","reason":"≤54"},{"id":"sbp-low-4","min":55,"max":69,"score":4,"zone":"red","display":"55–69","reason":"55–69"},{"id":"sbp-low-2","min":70,"max":79,"score":2,"zone":"orange","display":"70–79","reason":"70–79"},{"id":"sbp-low-1","min":80,"max":89,"score":1,"zone":"yellow","display":"80–89","reason":"80–89"},{"id":"sbp-normal","min":90,"max":119,"score":0,"zone":"white","display":"90–119","reason":"90–119"},{"id":"sbp-high-1","min":120,"max":139,"score":1,"zone":"yellow","display":"120–139","reason":"120–139"},{"id":"sbp-high-2","min":140,"max":169,"score":2,"zone":"orange","display":"140–169","reason":"140–169"},{"id":"sbp-high-4","min":170,"max":null,"score":4,"zone":"red","display":"≥170","reason":"≥170"}]}],"nonScoringObservations":[{"id":"whanau-concern","label":"Whānau concern","type":"option","scored":false,"safetyOverride":true,"options":[{"id":"no","label":"No concern"},{"id":"yes","label":"Concern present","action":"Escalate regardless of PEWS score."},{"id":"absent","label":"Whānau absent"}]},{"id":"level-of-consciousness","label":"Level of consciousness","type":"option","scored":false,"options":[{"id":"alert","label":"Alert"},{"id":"voice","label":"Voice"},{"id":"pain","label":"Pain"},{"id":"unresponsive","label":"Unresponsive"},{"id":"asleep","label":"Asleep"}]},{"id":"temperature","label":"Temperature","type":"numeric","unit":"°C","scored":false},{"id":"pain-score","label":"Pain score","type":"numeric","unit":"/10","scored":false}]},{"id":"adolescent-12-plus-years","label":"12+ years","shortLabel":"Adolescent","minAgeMonths":144,"maxAgeMonths":null,"graphic":{"type":"local-png","src":"assets/age-groups/adolescent.png","emojiFallback":"🧑‍🎧","alt":"Adolescent age group"},"parameters":[{"id":"respiratory-rate","label":"Respiratory rate","shortLabel":"RR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"rr-blue-low","min":null,"max":4,"score":"blue","zone":"blue","display":"≤4","reason":"≤4"},{"id":"rr-low-4","min":5,"max":9,"score":4,"zone":"red","display":"5–9","reason":"5–9"},{"id":"rr-low-2","min":10,"max":11,"score":2,"zone":"orange","display":"10–11","reason":"10–11"},{"id":"rr-low-1","min":12,"max":14,"score":1,"zone":"yellow","display":"12–14","reason":"12–14"},{"id":"rr-normal","min":15,"max":24,"score":0,"zone":"white","display":"15–24","reason":"15–24"},{"id":"rr-high-1","min":25,"max":29,"score":1,"zone":"yellow","display":"25–29","reason":"25–29"},{"id":"rr-high-2","min":30,"max":34,"score":2,"zone":"orange","display":"30–34","reason":"30–34"},{"id":"rr-high-4","min":35,"max":null,"score":4,"zone":"red","display":"≥35","reason":"≥35"}]},{"id":"respiratory-distress","label":"Respiratory distress","shortLabel":"WOB","type":"option","scored":true,"options":[{"id":"nil","label":"Nil","score":0,"zone":"white"},{"id":"mild","label":"Mild","score":1,"zone":"yellow"},{"id":"moderate","label":"Moderate","score":2,"zone":"orange"},{"id":"severe","label":"Severe","score":4,"zone":"red"}],"assessmentGuide":{"title":"Assessment of respiratory distress guide","scoringRule":"Score at the level of severest sign.","note":"Note that not all features are relevant to all conditions.","columns":[{"id":"mild","label":"Mild","scoreOptionId":"mild"},{"id":"moderate","label":"Moderate","scoreOptionId":"moderate"},{"id":"severe","label":"Severe","scoreOptionId":"severe"}],"rows":[{"id":"airway","label":"Airway","mild":["Stridor on exertion or crying","Wheeze present"],"moderate":["Some stridor at rest","Wheeze marked"],"severe":["Stridor at rest","New onset of stridor","Wheeze severe","Silent chest"]},{"id":"behaviour-feeding","label":"Behaviour and feeding","mild":["Normal","Talks in sentences"],"moderate":["Some or intermittent irritability","Difficulty talking or crying","Difficulty feeding or eating"],"severe":["Increased irritability and/or lethargy","Looks exhausted","Unable to talk or cry","Unable to feed or eat"]},{"id":"accessory-muscle-use","label":"Accessory muscle use","mild":["Mild intercostal and suprasternal recession"],"moderate":["Moderate intercostal and suprasternal recession","Tracheal tug","Nasal flaring","Head bobbing"],"severe":["Marked intercostal and suprasternal recession"]},{"id":"other","label":"Other","mild":[],"moderate":["May have brief apnoea"],"severe":["Gasping, grunting","Extreme pallor, cyanosis","Increasingly frequent or prolonged apnoea"]}]}},{"id":"oxygen-requirement","label":"Oxygen requirement","shortLabel":"O₂","type":"option","scored":true,"options":[{"id":"room-air","label":"Room air / no respiratory support","score":0,"zone":"white"},{"id":"low-flow-or-hf-under-35","label":"<4 L/min oxygen or high flow FiO₂ <35%","score":2,"zone":"orange"},{"id":"four-plus-or-hf-35-plus","label":"≥4 L/min oxygen or high flow FiO₂ ≥35%","score":4,"zone":"red"}]},{"id":"oxygen-saturation","label":"Oxygen saturation","shortLabel":"SpO₂","type":"numeric","unit":"%","scored":true,"ranges":[{"id":"spo2-low-2","min":null,"max":90,"score":2,"zone":"orange","display":"≤90"},{"id":"spo2-low-1","min":91,"max":94,"score":1,"zone":"yellow","display":"91–94"},{"id":"spo2-normal","min":95,"max":null,"score":0,"zone":"white","display":"≥95"}]},{"id":"heart-rate","label":"Heart rate","shortLabel":"HR","type":"numeric","unit":"/min","scored":true,"ranges":[{"id":"hr-blue-low","min":null,"max":39,"score":"blue","zone":"blue","display":"≤39","reason":"≤39"},{"id":"hr-low-4","min":40,"max":49,"score":4,"zone":"red","display":"40–49","reason":"40–49"},{"id":"hr-low-2","min":50,"max":59,"score":2,"zone":"orange","display":"50–59","reason":"50–59"},{"id":"hr-low-1","min":60,"max":64,"score":1,"zone":"yellow","display":"60–64","reason":"60–64"},{"id":"hr-normal","min":65,"max":109,"score":0,"zone":"white","display":"65–109","reason":"65–109"},{"id":"hr-high-1","min":110,"max":119,"score":1,"zone":"yellow","display":"110–119","reason":"110–119"},{"id":"hr-high-2","min":120,"max":134,"score":2,"zone":"orange","display":"120–134","reason":"120–134"},{"id":"hr-high-4","min":135,"max":null,"score":4,"zone":"red","display":"≥135","reason":"≥135"}]},{"id":"central-capillary-refill","label":"Central capillary refill","shortLabel":"CRT","type":"option","scored":true,"options":[{"id":"under-3-sec","label":"<3 sec","score":0,"zone":"white"},{"id":"3-sec-or-more","label":"≥3 sec","score":4,"zone":"red"}],"unit":"sec"},{"id":"systolic-blood-pressure","label":"Systolic blood pressure","shortLabel":"SBP","type":"numeric","unit":"mmHg","scored":true,"ranges":[{"id":"sbp-blue-low","min":null,"max":64,"score":"blue","zone":"blue","display":"≤64","reason":"≤64"},{"id":"sbp-low-4","min":65,"max":69,"score":4,"zone":"red","display":"65–69","reason":"65–69"},{"id":"sbp-low-2","min":70,"max":84,"score":2,"zone":"orange","display":"70–84","reason":"70–84"},{"id":"sbp-low-1","min":85,"max":99,"score":1,"zone":"yellow","display":"85–99","reason":"85–99"},{"id":"sbp-normal","min":100,"max":134,"score":0,"zone":"white","display":"100–134","reason":"100–134"},{"id":"sbp-high-1","min":135,"max":149,"score":1,"zone":"yellow","display":"135–149","reason":"135–149"},{"id":"sbp-high-2","min":150,"max":189,"score":2,"zone":"orange","display":"150–189","reason":"150–189"},{"id":"sbp-high-4","min":190,"max":null,"score":4,"zone":"red","display":"≥190","reason":"≥190"}]}],"nonScoringObservations":[{"id":"whanau-concern","label":"Whānau concern","type":"option","scored":false,"safetyOverride":true,"options":[{"id":"no","label":"No concern"},{"id":"yes","label":"Concern present","action":"Escalate regardless of PEWS score."},{"id":"absent","label":"Whānau absent"}]},{"id":"level-of-consciousness","label":"Level of consciousness","type":"option","scored":false,"options":[{"id":"alert","label":"Alert"},{"id":"voice","label":"Voice"},{"id":"pain","label":"Pain"},{"id":"unresponsive","label":"Unresponsive"},{"id":"asleep","label":"Asleep"}]},{"id":"temperature","label":"Temperature","type":"numeric","unit":"°C","scored":false},{"id":"pain-score","label":"Pain score","type":"numeric","unit":"/10","scored":false}]}],"escalationBands":[{"id":"pews-1-3","minScore":1,"maxScore":3,"label":"PEWS 1–3","colour":"yellow","actionTitle":"PEWS 1–3","actionText":"Optimise appropriate treatment as prescribed.
+Manage pain, anxiety or distress.
+Observations at least 4 hourly or more frequently if required.
+Review oxygen requirement.
+Consider informing ACNM/Nurse in Charge."},{"id":"pews-4-5","minScore":4,"maxScore":5,"label":"PEWS 4–5","colour":"orange","actionTitle":"PEWS 4–5","actionText":"Notify ACNM/Nurse in Charge.
+HO review within 60 minutes.
+Calculate full PEWS.
+Optimise treatment.
+Re-calculate full PEWS after interventions.
+Document plan, including timeframe, criteria for review and frequency of vital signs.
+Communicate plan to whānau."},{"id":"pews-6-7","minScore":6,"maxScore":7,"label":"PEWS 6–7","colour":"red","actionTitle":"PEWS 6–7","actionText":"Notify ACNM/Nurse in Charge.
+HO/Registrar review within 30 minutes.
+Consider Paediatric Medical & PAR team referral #6785.
+Consider ICU referral.
+Re-calculate full PEWS after interventions.
+Document plan, including timeframe, criteria for review and frequency of vital signs.
+Communicate plan to whānau."},{"id":"pews-8-plus","minScore":8,"maxScore":null,"label":"PEWS 8+","colour":"red","actionTitle":"PEWS 8+","actionText":"CONSIDER 777 PET CALL.
+Notify ACNM/Nurse in Charge.
+Immediate Paediatric Registrar + PAR review.
+Primary team review.
+Continuous monitoring.
+Monitor ABCD.
+Document plan as above.
+Re-calculate full PEWS after interventions.
+Consider transfer to ICU.
+Communicate plan to whānau."},{"id":"blue-zone","trigger":"any-blue-zone","label":"Any vital sign in the blue zone","colour":"blue","actionTitle":"PET / Paediatric medical emergency","actionText":"DIAL 777 and STATE PAEDIATRIC MEDICAL EMERGENCY.
+Support ABC + check blood glucose.
 
-<div class="toolbar">
-  <div class="tool-left">
-    <span>Require complete observation set</span>
-    <label class="switch"><input type="checkbox" id="requireAll"><span class="slider"></span></label>
-  </div>
-  <button id="resetBtn">Clear observations</button>
-</div>
-
-<div class="status-panel" aria-live="polite">
-  <div id="result">EWS: — | MET: —</div>
-  <div id="action">Mandatory Action: —</div>
-  <div id="triggered">Triggered by: —</div>
-  <div class="meta-row"><span id="completeness">0 of 7 observations entered</span><span id="timestamp">Not calculated yet</span></div>
-</div>
-
-<div class="header-row">
-  <div>Observation</div><div>Value</div><div>EWS</div>
-</div>
-
-<div class="obs-list">
-  <div class="form-row"><label for="rr">Resp Rate</label><div class="input-wrap"><input type="number" id="rr" min="0" max="80" inputmode="numeric"><small id="warn-rr" class="warn"></small></div><span id="badge-rr" class="badge b-white">—</span></div>
-  <div class="form-row"><label for="spo2">SpO₂ %</label><div class="input-wrap"><input type="number" id="spo2" min="0" max="100" inputmode="numeric"><small id="warn-spo2" class="warn"></small></div><span id="badge-spo2" class="badge b-white">—</span></div>
-  <div class="form-row"><label for="o2">Sup O₂</label><div class="input-wrap"><select id="o2"><option value=""></option><option>Yes</option><option>No</option></select><small id="warn-o2" class="warn"></small></div><span id="badge-o2" class="badge b-white">—</span></div>
-  <div class="form-row"><label for="temp">Temp (°C)</label><div class="input-wrap"><input type="number" id="temp" min="25" max="45" step="0.1" inputmode="decimal"><small id="warn-temp" class="warn"></small></div><span id="badge-temp" class="badge b-white">—</span></div>
-  <div class="form-row"><label for="sbp">Systolic BP</label><div class="input-wrap"><input type="number" id="sbp" min="0" max="300" inputmode="numeric"><small id="warn-sbp" class="warn"></small></div><span id="badge-sbp" class="badge b-white">—</span></div>
-  <div class="form-row"><label for="hr">Heart Rate</label><div class="input-wrap"><input type="number" id="hr" min="0" max="300" inputmode="numeric"><small id="warn-hr" class="warn"></small></div><span id="badge-hr" class="badge b-white">—</span></div>
-  <div class="form-row"><label for="loc">LOC</label><div class="input-wrap"><select id="loc"><option value=""></option><option>Alert</option><option>Voice or Pain</option><option>Unresponsive/fitting</option></select><small id="warn-loc" class="warn"></small></div><span id="badge-loc" class="badge b-white">—</span></div>
-</div>
-
-<button id="helpBtn">Help / Legend</button>
-<!-- Help / Legend Modal -->
-<div id="helpModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h3>EWS Legend</h3>
-    <ul>
-      <li><b>Blue</b>: MET criteria → dial 777 / immediate MET call.</li>
-      <li><b>Red</b>: Score 3 or high total score → urgent registrar review.</li>
-      <li><b>Orange</b>: Score 2 or moderate total score → early house officer review.</li>
-      <li><b>Yellow</b>: Score 1 → increase monitoring and manage reversible causes.</li>
-      <li><b>White</b>: Score 0 → within normal EWS range.</li>
-    </ul>
-    <h4>Immediate MET triggers in this app</h4>
-    <ul>
-      <li>Respiratory rate &lt;5 or &gt;35</li>
-      <li>Systolic BP ≤69</li>
-      <li>Heart rate ≤39 or ≥140</li>
-      <li>Unresponsive/fitting</li>
-      <li>Total EWS ≥10</li>
-    </ul>
-  </div>
-</div>
-
-  
+Dial 777 immediately if:
+Respiratory or cardiac arrest imminent or major bleeding."}],"escalationPathwayTitle":"Mandatory escalation pathway - Te Wao Nui Child Health Service"}],"developmentNotes":["Application created by Andrew Bethell in his own time using AI-assisted development. Copyright © Andrew Bethell. All rights reserved."]}</script>
 <script>
-function escapeHtml(value){
-  return String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-}
-function formatBadge(text){
-  if(!text || text==='—') return '<span class="score">—</span>';
-  if(String(text).startsWith('MET')){
-    const detail = String(text).replace(/^MET\s*/,'').replace(/[()]/g,'').trim();
-    return '<span class="score">MET</span>' + (detail ? '<span class="range">'+escapeHtml(detail)+'</span>' : '');
+'use strict';
+const APP_VERSION='v60';
+const SCREENS=['mainMenu','ageMenu','entryScreen','summaryScreen'];
+const $=id=>document.getElementById(id);
+let config=null, activeSystem=null, activeAgeBand=null, activeParameters=[], currentStep=0, entries=[], lastSummary=null;
+function escapeHtml(value){return String(value ?? '').replace(/[&<>\"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));}
+
+let audioCtx=null,alarmTimer=null,vibrateTimer=null,alarmSilenced=false,alarmPrimed=false,alarmAudio=null;
+function getAlarmAudio(){
+  if(!alarmAudio){
+    alarmAudio=new Audio('assets/audio/met-pet-alarm.wav?v='+encodeURIComponent(APP_VERSION));
+    alarmAudio.preload='auto';
+    alarmAudio.loop=true;
+    alarmAudio.volume=1.0;
   }
-  const m = String(text).match(/^([^\s]+)\s*\((.*)\)$/);
-  if(m) return '<span class="score">'+escapeHtml(m[1])+'</span><span class="range">'+escapeHtml(m[2])+'</span>';
-  return '<span class="score">'+escapeHtml(text)+'</span>';
+  return alarmAudio;
 }
-function setBadge(id,text,color){
-  const el=document.getElementById('badge-'+id);
-  el.innerHTML=formatBadge(text||'—');
-  el.className='badge b-'+(color||'white');
+function primeAlarmAudio(){
+  if(alarmPrimed) return;
+  alarmPrimed=true;
+  try{ getAlarmAudio().load(); }catch(e){}
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(Ctx && !audioCtx){audioCtx=new Ctx();}
+  }catch(e){audioCtx=null;}
 }
-function updateWarning(id, value, min, max, label){
-  const el=document.getElementById('warn-'+id);
-  if(!el) return;
-  if(value===''){ el.textContent=''; return; }
-  const n=Number(value);
-  if(!Number.isFinite(n)){ el.textContent='Check value'; return; }
-  el.textContent=(n<min || n>max) ? 'Check '+label+' - outside usual range' : '';
+function playSoftTripleAlarmPulse(){
+  // Fallback only: used if the browser refuses the pre-rendered audio file.
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!audioCtx && Ctx) audioCtx=new Ctx();
+    if(!audioCtx) return;
+    if(audioCtx.state==='suspended') audioCtx.resume();
+
+    const now=audioCtx.currentTime;
+    const master=audioCtx.createGain();
+    master.gain.setValueAtTime(0.0001,now);
+    master.gain.exponentialRampToValueAtTime(0.95,now+0.025);
+    master.gain.exponentialRampToValueAtTime(0.0001,now+0.95);
+    master.connect(audioCtx.destination);
+
+    [0,0.24,0.48].forEach(offset=>{
+      [660,990].forEach((freq,idx)=>{
+        const osc=audioCtx.createOscillator();
+        const gain=audioCtx.createGain();
+        const start=now+offset;
+        const end=start+0.18;
+        osc.type='sine';
+        osc.frequency.setValueAtTime(freq,start);
+        gain.gain.setValueAtTime(0.0001,start);
+        gain.gain.exponentialRampToValueAtTime(idx?0.35:0.9,start+0.016);
+        gain.gain.exponentialRampToValueAtTime(0.0001,end);
+        osc.connect(gain).connect(master);
+        osc.start(start);
+        osc.stop(end+0.03);
+      });
+    });
+  }catch(e){}
 }
-function updateStatusMeta(allFilled){
-  const ids=['rr','spo2','o2','temp','sbp','hr','loc'];
-  const complete=ids.filter(id=>document.getElementById(id).value!=='').length;
-  document.getElementById('completeness').textContent=complete+' of '+ids.length+' observations entered'+(allFilled?'':'');
-  document.getElementById('timestamp').textContent='Calculated '+new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+function vibrateEmergency(){
+  try{ if(navigator.vibrate) navigator.vibrate([220,90,220,650]); }catch(e){}
 }
-
-function recalc(){
-  const rr=document.getElementById('rr').value;
-  const spo2=document.getElementById('spo2').value;
-  const o2=document.getElementById('o2').value;
-  const temp=document.getElementById('temp').value;
-  const sbp=document.getElementById('sbp').value;
-  const hr=document.getElementById('hr').value;
-  const loc=document.getElementById('loc').value;
-  const requireAll=document.getElementById('requireAll').checked;
-  const allFilled=rr!==''&&spo2!==''&&o2!==''&&temp!==''&&sbp!==''&&hr!==''&&loc!=='';
-  updateStatusMeta(allFilled);
-  updateWarning('rr', rr, 0, 80, 'RR');
-  updateWarning('spo2', spo2, 0, 100, 'SpO₂');
-  updateWarning('temp', temp, 25, 45, 'temperature');
-  updateWarning('sbp', sbp, 0, 300, 'BP');
-  updateWarning('hr', hr, 0, 300, 'HR');
-
-  let s_rr=0,s_spo2=0,s_o2=0,s_temp=0,s_sbp=0,s_hr=0,s_loc=0;
-  let met=false; let triggers=[]; let metTriggers=[]; let highest='white';
-
-
-
-  // RR
-  if(rr!==''){const v=Number(rr);
-    if(v<5||v>35){met=true;setBadge('rr','MET (RR <5 or >35)','blue');triggers.push('RR '+v+' (Blue)'); metTriggers.push('RR '+v);highest='blue';}
-    else if(v>=5&&v<=8){s_rr=3;setBadge('rr','3 (RR 5–8)','red');triggers.push('RR '+v+' (Red)');if(highest!=='blue')highest='red';}
-    else if(v>=9&&v<=11){s_rr=1;setBadge('rr','1 (RR 9–11)','yellow');triggers.push('RR '+v+' (Yellow)');if(highest==='white')highest='yellow';}
-    else if(v>=12&&v<=20){s_rr=0;setBadge('rr','0 (RR 12–20)','white');}
-    else if(v>=21&&v<=24){s_rr=2;setBadge('rr','2 (RR 21–24)','orange');triggers.push('RR '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
-    else if(v>=25&&v<=35){s_rr=3;setBadge('rr','3 (RR 25–35)','red');triggers.push('RR '+v+' (Red)');if(highest!=='blue')highest='red';}
-  } else setBadge('rr','—','white');
-
-  // SpO2
-  if(spo2!==''){const v=Number(spo2);
-    if(v<=91){s_spo2=3;setBadge('spo2','3 (≤91%)','red');triggers.push('SpO₂ '+v+'% (Red)');if(highest!=='blue')highest='red';}
-    else if(v>=92&&v<=93){s_spo2=2;setBadge('spo2','2 (92–93%)','orange');triggers.push('SpO₂ '+v+'% (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
-    else if(v>=94&&v<=95){s_spo2=1;setBadge('spo2','1 (94–95%)','yellow');triggers.push('SpO₂ '+v+'% (Yellow)');if(highest==='white')highest='yellow';}
-    else if(v>=96){s_spo2=0;setBadge('spo2','0 (≥96%)','white');}
-  } else setBadge('spo2','—','white');
-
-  // O2
-  if(o2==='Yes'){s_o2=2;setBadge('o2','2 (Supplemental O₂)','orange');triggers.push('O₂ Yes (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
-  else if(o2==='No'){s_o2=0;setBadge('o2','0 (No O₂)','white');}
-  else setBadge('o2','—','white');
-
-  // Temp
-  if(temp!==''){const v=Number(temp);
-    if(v<=34.9||v>=39.0){s_temp=2;setBadge('temp','2 (≤34.9 or ≥39.0)','orange');triggers.push('Temp '+v+'°C (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
-    else if((v>=35.0&&v<=35.9)||(v>=38.0&&v<=38.9)){s_temp=1;setBadge('temp','1 (35–35.9 or 38–38.9)','yellow');triggers.push('Temp '+v+'°C (Yellow)');if(highest==='white')highest='yellow';}
-    else if(v>=36.0&&v<=37.9){s_temp=0;setBadge('temp','0 (36–37.9)','white');}
-  } else setBadge('temp','—','white');
-
-  // SBP
-  if(sbp!==''){const v=Number(sbp);
-    if(v<=69){met=true;setBadge('sbp','MET (≤69)','blue');triggers.push('SBP '+v+' (Blue)');metTriggers.push('SBP '+v); highest='blue';}
-    else if((v>=70&&v<=89)||v>=220){s_sbp=3;setBadge('sbp','3 (70–89 or ≥220)','red');triggers.push('SBP '+v+' (Red)');if(highest!=='blue')highest='red';}
-    else if(v>=90&&v<=99){s_sbp=2;setBadge('sbp','2 (90–99)','orange');triggers.push('SBP '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
-    else if(v>=100&&v<=109){s_sbp=1;setBadge('sbp','1 (100–109)','yellow');triggers.push('SBP '+v+' (Yellow)');if(highest==='white')highest='yellow';}
-    else if(v>=110&&v<=219){s_sbp=0;setBadge('sbp','0 (110–219)','white');}
-  } else setBadge('sbp','—','white');
-
-  // HR
-  if(hr!==''){const v=Number(hr);
-    if(v<=39||v>=140){met=true;setBadge('hr','MET (≤39 or ≥140)','blue');triggers.push('HR '+v+' (Blue)');metTriggers.push('HR '+v);highest='blue';}
-    else if(v>=130&&v<=139){s_hr=3;setBadge('hr','3 (130–139)','red');triggers.push('HR '+v+' (Red)');if(highest!=='blue')highest='red';}
-    else if((v>=111&&v<=129)||(v>=40&&v<=49)){s_hr=2;setBadge('hr','2 (111–129 or 40–49)','orange');triggers.push('HR '+v+' (Orange)');if(highest!=='blue'&&highest!=='red')highest='orange';}
-    else if(v>=90&&v<=110){s_hr=1;setBadge('hr','1 (90–110)','yellow');triggers.push('HR '+v+' (Yellow)');if(highest==='white')highest='yellow';}
-    else if(v>=50&&v<=89){s_hr=0;setBadge('hr','0 (50–89)','white');}
-  } else setBadge('hr','—','white');
-
-  // LOC
-  if(loc==='Unresponsive/fitting'){met=true;setBadge('loc','MET (Unresponsive/fitting)','blue');triggers.push('LOC (Blue)'); metTriggers.push('LOC'); highest='blue';}
-  else if(loc==='Voice or Pain'){s_loc=3;setBadge('loc','3 (Voice or Pain)','red');triggers.push('LOC (Red)');if(highest!=='blue')highest='red';}
-  else if(loc==='Alert'){s_loc=0;setBadge('loc','0 (Alert)','white');}
-  else setBadge('loc','—','white');
-
- // Totals & display
-const total = s_rr + s_spo2 + s_o2 + s_temp + s_sbp + s_hr + s_loc;
-const showEWS = requireAll ? allFilled : true;
-
-// Always show a numeric EWS when allowed
-let ewsText = '—';
-if (showEWS) {
-  ewsText = String(total);
-  if (total >= 10) { met = true; } // force MET when EWS ≥10
-}
-
-// Top-line result
-const resultEl = document.getElementById('result');
-resultEl.classList.toggle('met-alert', met);
-resultEl.textContent = met ? ('MET CALL REQUIRED | EWS: ' + ewsText) : ('EWS: ' + ewsText + ' | MET: No');
-
-  // Band (no blue except MET)
-  let band='white';
-  if(!isNaN(total)){
-    if(total>=8) band='red';
-    else if(total>=6) band='orange';
-    else if(total>=1) band='yellow';
-  }
-  function rank(c){return {'white':0,'yellow':1,'orange':2,'red':3,'blue':4}[c]||0;}
-  const final=met?'blue':(rank(highest)>rank(band)?highest:band);
-
-  // Background + actions
-  const action=document.getElementById('action');
-  document.body.className='';
-  if(requireAll && !allFilled){
-    if(met){document.body.classList.add('zone-blue');action.textContent='Mandatory Action: Dial 777, call MET, support ABC';}
-    else {document.body.classList.add('zone-white');action.textContent='Mandatory Action: — (complete all fields to show EWS)';}
-  }else{
-    if(final==='blue'){document.body.classList.add('zone-blue');action.textContent='Mandatory Action: Dial 777, call MET, support ABC';}
-    else if(final==='red'){document.body.classList.add('zone-red');action.textContent='Mandatory Action: Registrar review within 20 min, consider ICU referral';}
-    else if(final==='orange'){document.body.classList.add('zone-orange');action.textContent='Mandatory Action: House officer review within 60 min, inform nurse in charge, refer to PAR nurse';}
-    else if(final==='yellow'){document.body.classList.add('zone-yellow');action.textContent='Mandatory Action: Manage pain/fever/distress, increase monitoring frequency';}
-    else {document.body.classList.add('zone-white');action.textContent='Mandatory Action: —';}
-  }
-
- // Info bar / reason message
-const t = document.getElementById('triggered');
-let info = '—';
-
-if (met) {
-  if (total >= 10) {
-    // EWS-based MET
-    info = `Reason: EWS ≥10 (score ${total}) – MET call`;
-  } else {
-    // Vital-sign based MET
-    if (metTriggers.length === 1) {
-      info = `Immediate MET call: ${metTriggers[0]} has triggered an immediate MET call`;
-    } else if (metTriggers.length > 1) {
-      info = `Immediate MET call: vital sign(s) ${metTriggers.join(', ')} have triggered an immediate MET call`;
-    } else {
-      // Fallback: if for any reason met=true without a metTrigger captured
-      info = `Immediate MET call: a vital sign has triggered an immediate MET call`;
+function startEmergencyAlarm(){
+  if(alarmSilenced) return;
+  stopEmergencyAlarm(false);
+  vibrateEmergency();
+  vibrateTimer=setInterval(vibrateEmergency,5200);
+  try{
+    const audio=getAlarmAudio();
+    audio.pause();
+    audio.currentTime=0;
+    audio.volume=1.0;
+    const playPromise=audio.play();
+    if(playPromise && typeof playPromise.catch==='function'){
+      playPromise.catch(()=>{
+        playSoftTripleAlarmPulse();
+        alarmTimer=setInterval(playSoftTripleAlarmPulse,4200);
+      });
     }
+  }catch(e){
+    playSoftTripleAlarmPulse();
+    alarmTimer=setInterval(playSoftTripleAlarmPulse,4200);
   }
-} else {
-  // Non-MET states keep the original “Triggered by” list (yellow/orange/red contributors)
-  info = 'Triggered by: ' + (triggers.length ? triggers.join(', ') : '—');
+}
+function stopEmergencyAlarm(markSilenced=true){
+  if(alarmTimer){clearInterval(alarmTimer);alarmTimer=null;}
+  if(vibrateTimer){clearInterval(vibrateTimer);vibrateTimer=null;}
+  try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
+  try{ if(alarmAudio){alarmAudio.pause(); alarmAudio.currentTime=0;} }catch(e){}
+  if(markSilenced) alarmSilenced=true;
+}
+function resetEmergencyAlarm(){
+  stopEmergencyAlarm(false);
+  alarmSilenced=false;
 }
 
-t.textContent = info;
-
+function showScreen(id){SCREENS.forEach(screenId=>$(screenId).classList.toggle('active',screenId===id));}
+function setBodyZone(zone){document.body.className='zone-'+(zone||'white');}
+async function loadConfig(){try{const res=await fetch('./data/ews-config.json?v='+encodeURIComponent(APP_VERSION),{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);return await res.json();}catch(err){return JSON.parse($('embedded-config').textContent.trim());}}
+function getSystem(id){return config.systems.find(s=>s.id===id);}function emergencyLabel(system){return system?.scoreBehaviour?.emergencyDisplayLabel||(system?.patientGroup==='paediatric'?'PET':'MET');}function scoreText(score,system){return score==='blue'?emergencyLabel(system):String(score);}function zoneRank(zone){return ({white:0,yellow:1,orange:2,red:3,blue:4})[zone]??0;}function scoreNumber(score){return score==='blue'?0:Number(score||0);}
+function displayRange(range,parameter){if(range.display)return range.display;const min=range.min,max=range.max;if(min==null&&max==null)return 'Any value';if(min==null)return '≤'+max;if(max==null)return '≥'+min;return min+'–'+max;}
+function selectedValueLabel(entry){const p=entry.parameter;if(entry.choice.kind==='range')return `${p.label} ${displayRange(entry.choice.item,p)}${p.unit?' '+p.unit:''}`;return `${p.label} = ${entry.choice.item.label}`;}
+function chooseAction(system,summary){const bands=system.escalationBands||[];if(summary.emergency){return bands.find(b=>b.trigger||b.colour==='blue')||{colour:'blue',actionText:`Mandatory Action: ${emergencyLabel(system)}`};}if(system.id==='adult-ews'&&summary.highestZone==='red'){const red=bands.find(b=>b.colour==='red');if(red)return red;}return bands.find(b=>{if(b.trigger)return false;const min=b.minScore??-Infinity,max=b.maxScore??Infinity;return summary.total>=min&&summary.total<=max;})||{colour:'white',actionText:'Mandatory Action: —'};}
+function calculateSummary(system=activeSystem,ageBand=activeAgeBand,sourceEntries=entries){const scored=sourceEntries.filter(Boolean);let total=0,emergency=false,highestZone='white',blueCount=0;scored.forEach(e=>{const score=e.choice.item.score;total+=scoreNumber(score);if(score==='blue'){emergency=true;blueCount++;}if(zoneRank(e.choice.item.zone)>zoneRank(highestZone))highestZone=e.choice.item.zone;});const threshold=system?.scoreBehaviour?.metScoreThreshold;if(threshold!=null&&total>=Number(threshold))emergency=true;const provisional={total,emergency,highestZone,blueCount,entered:scored.length,totalRequired:activeParameters.length};const action=chooseAction(system,provisional);const finalZone=emergency?'blue':(action.colour||highestZone||'white');return {...provisional,action,finalZone,timestamp:new Date()};}
+function resetEntry(system,ageBand){activeSystem=system;activeAgeBand=ageBand;activeParameters=[...(ageBand.parameters||[])];entries=new Array(activeParameters.length).fill(null);currentStep=0;lastSummary=null;}
+function startAdult(){resetEmergencyAlarm();const sys=getSystem('adult-ews');resetEntry(sys,sys.ageBands[0]);renderEntry();showScreen('entryScreen');}function startPaediatricAgeMenu(){resetEmergencyAlarm();renderAgeMenu();showScreen('ageMenu');}function startPaediatric(ageBandId){const sys=getSystem('nz-pews');const age=sys.ageBands.find(a=>a.id===ageBandId);resetEntry(sys,age);renderEntry();showScreen('entryScreen');}
+function renderAgeMenu(){const sys=getSystem('nz-pews');$('ageGrid').innerHTML=(sys.ageBands||[]).map(a=>{const src=a.graphic?.src||'';const fallback=a.graphic?.emojiFallback||'◻';return `<button class="age-card" type="button" data-age-id="${escapeHtml(a.id)}"><div class="age-icon-shell">${src?`<img class="age-icon-img" src="${escapeHtml(src)}" alt="${escapeHtml(a.graphic?.alt||a.shortLabel||a.label)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:''}<span class="age-emoji">${escapeHtml(fallback)}</span></div><div class="age-label">${escapeHtml(a.shortLabel||a.label)}</div><div class="age-range">${escapeHtml(a.label)}</div></button>`;}).join('');$('ageGrid').querySelectorAll('[data-age-id]').forEach(btn=>btn.addEventListener('click',()=>startPaediatric(btn.dataset.ageId)));}
+function renderEntry(){setBodyZone('white');const isAdult=activeSystem.id==='adult-ews';const titleEl=$('entryTitle');titleEl.classList.remove('header-adult','header-paediatric');titleEl.classList.add(isAdult?'header-adult':'header-paediatric');titleEl.textContent=isAdult?'NZ Adult EWS':`NZ Paediatric EWS - ${activeAgeBand.label}`;const stepCard=$('stepCard');stepCard.classList.remove('parameter-adult','parameter-paediatric');stepCard.classList.add(isAdult?'parameter-adult':'parameter-paediatric');const bottomBar=$('bottomBar');bottomBar.classList.remove('adult-nav','paediatric-nav');bottomBar.classList.add(isAdult?'adult-nav':'paediatric-nav');const param=activeParameters[currentStep];$('stepCount').textContent=`Item ${currentStep+1} of ${activeParameters.length}`;$('parameterTitle').textContent=param.label;const choices=parameterChoices(param);const hint=(activeSystem?.id==='nz-pews'&&param.id==='respiratory-distress'&&param.assessmentGuide)?'<div class="entry-hint"><strong>Tip:</strong> Long-press any respiratory distress option to open the Respiratory Distress Guide.</div>':'';$('optionList').innerHTML=choices.map(choice=>renderChoiceButton(param,choice)).join('')+hint;attachChoiceHandlers(param);}
+function parameterChoices(param){return param.type==='option'?(param.options||[]).map(item=>({kind:'option',item})):(param.ranges||[]).map(item=>({kind:'range',item}));}
+function renderChoiceButton(param,choice){const item=choice.item,zone=item.zone||'white';const label=choice.kind==='range'?displayRange(item,param):(item.label||item.id);const sub=choice.kind==='range'?(param.unit||''):(item.reason||'');const score=scoreText(item.score,activeSystem);const choices=parameterChoices(param);const index=choices.findIndex(c=>c.item===item);return `<button class="range-button b-${escapeHtml(zone)}" type="button" data-choice-index="${index}"><span class="range-main"><span class="range-display">${escapeHtml(label)}</span>${sub?`<span class="range-sub">${escapeHtml(sub)}</span>`:''}</span><span class="score-pill">${escapeHtml(score)}</span></button>`;}
+function selectChoice(choiceIndex){const param=activeParameters[currentStep];const choice=parameterChoices(param)[choiceIndex];entries[currentStep]={parameter:param,choice};if(currentStep<activeParameters.length-1){currentStep++;renderEntry();}else{renderSummary();showScreen('summaryScreen');}}
+function goEntryBack(){if(activeSystem?.id==='adult-ews'){goMainMenu();return;}setBodyZone('white');showScreen('ageMenu');}
+function goMainMenu(){resetEmergencyAlarm();setBodyZone('white');showScreen('mainMenu');}
+function attachLongPressBack(button, tapHandler, longHandler){
+  const LONG_PRESS_MS=650;
+  let timer=null;
+  let longFired=false;
+  function clearTimer(){if(timer){clearTimeout(timer);timer=null;}}
+  function start(e){
+    longFired=false;
+    clearTimer();
+    timer=setTimeout(()=>{longFired=true;timer=null;longHandler();},LONG_PRESS_MS);
+  }
+  function cancel(){clearTimer();}
+  function end(e){
+    clearTimer();
+    if(longFired){
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    tapHandler();
+  }
+  button.addEventListener('pointerdown',start);
+  button.addEventListener('pointerup',end);
+  button.addEventListener('pointercancel',cancel);
+  button.addEventListener('pointerleave',cancel);
+  button.addEventListener('contextmenu',e=>e.preventDefault());
 }
 
-function resetAll(){
-  ['rr','spo2','o2','temp','sbp','hr','loc'].forEach(id=>document.getElementById(id).value='');
-  ['rr','spo2','o2','temp','sbp','hr','loc'].forEach(id=>setBadge(id,'—','white'));
-  const resultEl=document.getElementById('result');
-  resultEl.classList.remove('met-alert');
-  resultEl.textContent='EWS: — | MET: —';
-  document.getElementById('action').textContent='Mandatory Action: —';
-  document.getElementById('triggered').textContent='Triggered by: —';
-  document.getElementById('completeness').textContent='0 of 7 observations entered';
-  document.getElementById('timestamp').textContent='Not calculated yet';
-  document.body.className='zone-white';
-}
-
-// Wire up
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('input,select').forEach(el=>{
-    el.addEventListener('input',recalc);
-    el.addEventListener('change',recalc);
+function attachChoiceHandlers(param){
+  $('optionList').querySelectorAll('[data-choice-index]').forEach(btn=>{
+    const index=Number(btn.dataset.choiceIndex);
+    if(activeSystem?.id==='nz-pews' && param.id==='respiratory-distress' && param.assessmentGuide){
+      attachRespiratoryDistressLongPress(btn,index,param);
+    }else{
+      btn.addEventListener('click',()=>selectChoice(index));
+    }
   });
-  document.getElementById('requireAll').addEventListener('change',recalc);
-  document.getElementById('resetBtn').addEventListener('click',resetAll);
-  const modal=document.getElementById('helpModal');
-  document.getElementById('helpBtn').addEventListener('click',()=>modal.style.display='block');
-  document.querySelector('.close').addEventListener('click',()=>modal.style.display='none');
-  window.addEventListener('click',(e)=>{ if(e.target===modal) modal.style.display='none'; });
-  recalc();
-});
-  
+}
+function attachRespiratoryDistressLongPress(button, choiceIndex, param){
+  const LONG_PRESS_MS=650;
+  let timer=null;
+  let longFired=false;
+  function clearTimer(){if(timer){clearTimeout(timer);timer=null;}}
+  button.addEventListener('pointerdown',e=>{
+    longFired=false;
+    clearTimer();
+    timer=setTimeout(()=>{longFired=true;timer=null;openRespiratoryDistressGuide(param);},LONG_PRESS_MS);
+  });
+  button.addEventListener('pointerup',e=>{
+    clearTimer();
+    e.preventDefault();
+    e.stopPropagation();
+    if(!longFired) selectChoice(choiceIndex);
+  });
+  button.addEventListener('pointercancel',clearTimer);
+  button.addEventListener('pointerleave',clearTimer);
+  button.addEventListener('contextmenu',e=>e.preventDefault());
+  button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
+}
+let respGuideSelections=new Set();
+function openRespiratoryDistressGuide(param){
+  respGuideSelections=new Set();
+  const guide=param.assessmentGuide;
+  if(!guide) return;
+  $('respDistressGuideTitle').textContent=guide.title||'Assessment of respiratory distress guide';
+  const cols=guide.columns||[];
+  const rows=guide.rows||[];
+  const head=`<tr><th>Feature</th>${cols.map(c=>`<th>${escapeHtml(c.label||c.id)}</th>`).join('')}</tr>`;
+  const body=rows.map(row=>`<tr><td class="guide-row-label">${escapeHtml(row.label||row.id)}</td>${cols.map(col=>renderGuideCell(row,col)).join('')}</tr>`).join('');
+  const rule=guide.scoringRule||'Score at the level of severest sign.';
+  const note=guide.note||'';
+  $('respGuideBody').innerHTML=`<p class="guide-intro">Select the signs that apply. The suggested respiratory distress level updates as boxes are selected.</p><table class="distress-guide-table"><thead>${head}</thead><tbody>${body}</tbody></table><div class="guide-note">${escapeHtml(rule)}${note?'<br>'+escapeHtml(note):''}</div><div id="respGuideSuggestion" class="guide-suggestion none"><div class="suggestion-label">Suggested respiratory distress</div><div class="suggestion-value">Select signs above</div></div><div class="guide-actions"><button id="respGuideCancelBtn" class="nav-button guide-cancel" type="button">Cancel</button><button id="respGuideContinueBtn" class="nav-button guide-continue" type="button">Continue</button></div>`;
+  $('respGuideBody').querySelectorAll('.guide-cell:not(.empty)').forEach(cell=>cell.addEventListener('click',()=>toggleGuideCell(cell)));
+  updateRespGuideSuggestion();
+  bindTap($('respGuideCancelBtn'),closeRespiratoryDistressGuide);
+  bindTap($('respGuideContinueBtn'),applyRespiratoryDistressGuide);
+  $('respDistressGuideModal').classList.add('open');
+}
+function renderGuideCell(row,col){
+  const items=row[col.id]||[];
+  if(!items.length) return `<td class="guide-cell empty severity-${escapeHtml(col.id)}">—</td>`;
+  const key=`${row.id}:${col.id}`;
+  return `<td class="guide-cell severity-${escapeHtml(col.id)}" data-severity="${escapeHtml(col.id)}" data-guide-key="${escapeHtml(key)}"><ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul></td>`;
+}
+function toggleGuideCell(cell){
+  const key=cell.dataset.guideKey;
+  if(respGuideSelections.has(key)){respGuideSelections.delete(key);cell.classList.remove('selected');}
+  else{respGuideSelections.add(key);cell.classList.add('selected');}
+  updateRespGuideSuggestion();
+}
+function currentRespGuideSeverity(){
+  const severities=[...respGuideSelections].map(k=>k.split(':')[1]);
+  if(severities.includes('severe')) return 'severe';
+  if(severities.includes('moderate')) return 'moderate';
+  if(severities.includes('mild')) return 'mild';
+  return null;
+}
+function updateRespGuideSuggestion(){
+  const el=$('respGuideSuggestion');
+  if(!el) return;
+  const severity=currentRespGuideSeverity();
+  const labels={mild:'Mild',moderate:'Moderate',severe:'Severe'};
+  el.className='guide-suggestion '+(severity||'none');
+  const value=el.querySelector('.suggestion-value');
+  if(value) value.textContent=severity?labels[severity]:'Select signs above';
+}
+function closeRespiratoryDistressGuide(){
+  $('respDistressGuideModal').classList.remove('open');
+  respGuideSelections=new Set();
+}
+function applyRespiratoryDistressGuide(){
+  const selectedSeverity=currentRespGuideSeverity();
+  if(!selectedSeverity){closeRespiratoryDistressGuide();return;}
+  const param=activeParameters[currentStep];
+  const choices=parameterChoices(param);
+  const choiceIndex=choices.findIndex(c=>String(c.item.id).toLowerCase()===selectedSeverity || String(c.item.label).toLowerCase()===selectedSeverity);
+  closeRespiratoryDistressGuide();
+  if(choiceIndex>=0) selectChoice(choiceIndex);
+}
+
+function rowClass(entry){return 'zone-'+(entry.choice.item.zone||'white');}
+function renderSummary(){
+  lastSummary=calculateSummary();
+  setBodyZone(lastSummary.finalZone);
+  const label=emergencyLabel(activeSystem),isPaed=activeSystem.patientGroup==='paediatric';
+  $('summaryResult').className='result-box '+(lastSummary.emergency?'met-alert emergency-mega':'');
+  $('summaryResult').textContent=lastSummary.emergency?label:((isPaed?'PEWS: ':'EWS: ')+lastSummary.total);
+  $('summaryAction').textContent=lastSummary.action?.actionText||'Mandatory Action: —';
+  if(lastSummary.emergency){
+    $('summaryDetails').classList.add('hidden');
+    $('summaryDetails').innerHTML='';
+    $('silenceAlarmBtn').classList.toggle('hidden',alarmSilenced);
+    startEmergencyAlarm();
+  }else{
+    stopEmergencyAlarm(false);
+    alarmSilenced=false;
+    $('silenceAlarmBtn').classList.add('hidden');
+    $('summaryDetails').classList.remove('hidden');
+    $('summaryDetails').innerHTML=`<div class="detail-box"><div class="detail-label">Numeric total</div><div class="detail-value">${lastSummary.total}</div></div><div class="detail-box"><div class="detail-label">Emergency status</div><div class="detail-value">No</div></div><div class="detail-box"><div class="detail-label">Observations entered</div><div class="detail-value">${lastSummary.entered} of ${lastSummary.totalRequired}</div></div><div class="detail-box"><div class="detail-label">Calculated</div><div class="detail-value">${lastSummary.timestamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+  }
+  $('summaryRows').innerHTML=entries.filter(Boolean).map(e=>`<tr class="${rowClass(e)}"><td><b>${escapeHtml(e.parameter.label)}</b></td><td>${escapeHtml(selectedValueLabel(e))}</td><td class="summary-score">${escapeHtml(scoreText(e.choice.item.score,activeSystem))}</td></tr>`).join('');
+  renderSummaryActions();
+}
+function renderSummaryActions(){const host=$('summaryActions');if(activeSystem.id==='adult-ews'){host.className='summary-actions two';host.innerHTML='<button class="nav-button" id="againBtn" type="button">Begin again</button><button class="nav-button" id="mainBtn" type="button">Main menu</button>';bindAppTap($('againBtn'),startAdult);bindAppTap($('mainBtn'),goMainMenu);}else{host.className='summary-actions three';host.innerHTML='<button class="nav-button" id="againBtn" type="button">Enter again for same age group</button><button class="nav-button" id="ageAgainBtn" type="button">Choose another age group</button><button class="nav-button" id="mainBtn" type="button">Main menu</button>';bindAppTap($('againBtn'),()=>startPaediatric(activeAgeBand.id));bindAppTap($('ageAgainBtn'),startPaediatricAgeMenu);bindAppTap($('mainBtn'),goMainMenu);}}
+function renderHelp(){const system=activeSystem||getSystem('adult-ews'),age=activeAgeBand||(system?.ageBands?.[0]);$('helpTitle').textContent=system.id==='adult-ews'?'NZ Adult EWS Help':`NZ Paediatric EWS Help - ${age.label}`;const parameters=(age.parameters||[]).map(param=>renderLegendParam(param)).join('');const prompt=system.scoreBehaviour?.escalationPrompt?`<div class="escalation-prompt">${escapeHtml(system.scoreBehaviour.escalationPrompt)}</div>`:'';const pathwayTitle=system.escalationPathwayTitle||'Mandatory actions';$('helpBody').innerHTML=`<div class="legend-section"><h4>Scoring table</h4>${parameters}</div><div class="legend-section"><h4>${escapeHtml(pathwayTitle)}</h4>${prompt}${renderEscalationLegend(system)}</div><div class="legend-section clinical-notice"><h4>Clinical safety notice</h4><p>This tool is designed to assist with rapid calculation of New Zealand EWS/PEWS scoring systems using configurable JSON-based scoring tables derived from publicly available guidance.</p><p>This software is not sanctioned, endorsed, certified, or maintained by Te Tāhū Hauora Health Quality &amp; Safety Commission or any other governing organisation.</p><p>Users must refer to the latest official NZ EWS/PEWS charts, policies, and published guidelines for authoritative and current scoring, escalation, and clinical decision-making requirements.</p></div>`;$('helpModal').classList.add('open');}
+function renderLegendParam(param){let rows='';if(param.type==='option'){rows=(param.options||[]).map(o=>`<tr class="zone-${escapeHtml(o.zone||'white')}"><td>${escapeHtml(o.label)}</td><td>${escapeHtml(scoreText(o.score,activeSystem))}</td></tr>`).join('');}else{rows=(param.ranges||[]).map(r=>`<tr class="zone-${escapeHtml(r.zone||'white')}"><td>${escapeHtml(displayRange(r,param))}${param.unit?' '+escapeHtml(param.unit):''}</td><td>${escapeHtml(scoreText(r.score,activeSystem))}</td></tr>`).join('');}return `<h4>${escapeHtml(param.label)}</h4><table class="legend-table"><thead><tr><th>Range / option</th><th>Score</th></tr></thead><tbody>${rows}</tbody></table>`;}
+function renderEscalationLegend(system){return `<table class="legend-table"><thead><tr><th>Trigger</th><th>Mandatory action</th></tr></thead><tbody>${(system.escalationBands||[]).map(b=>`<tr class="zone-${escapeHtml(b.colour||'white')}"><td>${escapeHtml(b.label||b.id)}</td><td>${escapeHtml(b.actionText||'')}</td></tr>`).join('')}</tbody></table>`;}
+function closeHelp(){$('helpModal').classList.remove('open');}
+function isInteractiveTarget(target){return !!target.closest('button, a, input, textarea, select, [role=button]');}
+function blockZoomGestures(){
+  document.addEventListener('gesturestart',e=>e.preventDefault());
+  document.addEventListener('gesturechange',e=>e.preventDefault());
+  document.addEventListener('gestureend',e=>e.preventDefault());
+  let lastTouch=0;
+  document.addEventListener('touchend',e=>{
+    const now=Date.now();
+    if(!isInteractiveTarget(e.target) && now-lastTouch<350) e.preventDefault();
+    lastTouch=now;
+  },{passive:false});
+}
+function bindTap(el,handler){
+  if(!el) return;
+  let lastRun=0;
+  const run=e=>{
+    const now=Date.now();
+    if(now-lastRun<450) return;
+    lastRun=now;
+    handler(e);
+  };
+  el.addEventListener('click',run);
+  el.addEventListener('touchend',e=>{ e.preventDefault(); run(e); },{passive:false});
+}
+function blockTextSelectionAndCallout(){
+  document.addEventListener('selectstart',e=>{
+    if(!e.target.closest('input, textarea')) e.preventDefault();
+  });
+  document.addEventListener('dragstart',e=>{
+    if(!e.target.closest('input, textarea')) e.preventDefault();
+  });
+  document.addEventListener('contextmenu',e=>{
+    if(!e.target.closest('input, textarea')) e.preventDefault();
+  });
+}
+function bindAppTap(el,handler){
+  if(!el) return;
+  let lastRun=0;
+  const run=e=>{
+    const now=Date.now();
+    if(now-lastRun<380){
+      if(e){e.preventDefault(); e.stopPropagation();}
+      return;
+    }
+    lastRun=now;
+    if(e){e.preventDefault(); e.stopPropagation();}
+    try{ handler(e); }catch(err){ console.error('Control handler failed',err); }
+  };
+  // Android Chrome/WebView can miss pointerup on fixed-position controls;
+  // bind touchend, pointerup and click, then de-duplicate by timestamp.
+  el.addEventListener('touchend',run,{passive:false});
+  el.addEventListener('pointerup',run);
+  el.addEventListener('click',run);
+  el.addEventListener('keyup',e=>{ if(e.key==='Enter'||e.key===' '){ run(e); } });
+}
+async function init(){
+  try{config=await loadConfig();}
+  catch(err){
+    console.error('Config load failed',err);
+    alert('EWS configuration failed to load.');
+    return;
+  }
+  document.addEventListener('pointerdown',primeAlarmAudio,{once:true,passive:true});
+  bindAppTap($('adultBtn'),startAdult);
+  bindAppTap($('paedBtn'),startPaediatricAgeMenu);
+  attachLongPressBack($('ageBackBtn'),goMainMenu,goMainMenu);
+  attachLongPressBack($('entryBackBtn'),goEntryBack,goMainMenu);
+  bindAppTap($('helpBtn'),renderHelp);
+  bindAppTap($('silenceAlarmBtn'),()=>{stopEmergencyAlarm(true);$('silenceAlarmBtn').classList.add('hidden');});
+  bindAppTap($('closeHelpBtn'),closeHelp);
+  bindAppTap($('closeRespGuideBtn'),closeRespiratoryDistressGuide);
+  $('helpModal').addEventListener('click',e=>{if(e.target===$('helpModal'))closeHelp();});
+  $('respDistressGuideModal').addEventListener('click',e=>{if(e.target===$('respDistressGuideModal'))closeRespiratoryDistressGuide();});
+  blockZoomGestures();
+  blockTextSelectionAndCallout();
+  showScreen('mainMenu');
+}
+document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
