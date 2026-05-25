@@ -1,4 +1,4 @@
-const CACHE_NAME = "ews-v75";
+const CACHE_NAME = "ews-v62";
 const APP_SHELL = [
   './index.html?v=60',
   './manifest.json?v=60',

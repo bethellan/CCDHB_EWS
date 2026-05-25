@@ -1,4 +1,4 @@
-## v75
+## v62
 
 - Silences MET/PET alarm when returning to the main menu from the summary screen.
 - Adds a respiratory distress long-press guide hint under the paediatric respiratory distress options.
@@ -74,9 +74,6 @@ Suggested next checks before wider use:
 - Kept scoring logic and visual layout unchanged.
 
 
-## v75
+## v62
 
 Fixes embedded fallback JSON so the app can load when opened locally/offline if the external JSON fetch fails. No scoring, colour, or layout logic intentionally changed.
-
-
-v64: Final summary action buttons now use adult/paediatric system colours; PEWS high-risk 777/PET prompt is not repeated in the action line when already shown in the red result box.
