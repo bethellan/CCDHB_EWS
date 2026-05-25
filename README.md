@@ -1,4 +1,4 @@
-## v60
+## v61
 
 - Silences MET/PET alarm when returning to the main menu from the summary screen.
 - Adds a respiratory distress long-press guide hint under the paediatric respiratory distress options.
