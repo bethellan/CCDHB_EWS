@@ -1,9 +1,9 @@
-const CACHE_NAME = "ews-v68";
+const CACHE_NAME = "ews-v69";
 const APP_SHELL = [
-  './index.html?v=68',
-  './manifest.json?v=68',
-  './data/ews-config.json?v=68',
-  './assets/audio/met-pet-alarm.wav?v=68',
+  './index.html?v=69',
+  './manifest.json?v=69',
+  './data/ews-config.json?v=69',
+  './assets/audio/met-pet-alarm.wav?v=69',
   './assets/age-groups/adult.svg',
   './assets/age-groups/infant.png',
   './assets/age-groups/infant-longpress-reveal.png',
